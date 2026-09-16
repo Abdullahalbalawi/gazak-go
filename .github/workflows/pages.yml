@@ -29,9 +29,11 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Build preview
+      - name: Build demo preview
         run: npm run build
         env:
+          VITE_DEMO_MODE: "true"
+          VITE_CARD_PAYMENTS_ENABLED: "false"
           VITE_SUPABASE_URL: https://preview-placeholder.supabase.co
           VITE_SUPABASE_ANON_KEY: preview-placeholder-anon-key
 
