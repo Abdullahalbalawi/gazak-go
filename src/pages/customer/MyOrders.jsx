@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import CustomerHeader from "@/components/CustomerHeader";
 import BottomNav from "@/components/BottomNav";
@@ -16,15 +16,28 @@ export default function MyOrders() {
   const [cancelling, setCancelling] = useState(null);
 
   const fetchOrders = async () => {
+    if (!user?.id) return;
+    setLoading(true);
     try {
-      const list = await base44.entities.Order.filter(
-        { customer_id: user.id },
-        "-created_date",
-        50
-      );
-      setOrders(list);
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, order_items(*)")
+        .eq("customer_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+
+      setOrders((data || []).map((order) => ({
+        ...order,
+        created_date: order.created_at,
+        items: (order.order_items || []).map((item) => ({
+          ...item,
+          total: Number(item.price || 0) * Number(item.quantity || 0),
+        })),
+      })));
     } catch (e) {
       console.error(e);
+      toast({ title: "تعذر تحميل الطلبات", description: e.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -37,16 +50,17 @@ export default function MyOrders() {
   const handleCancel = async (orderId) => {
     setCancelling(orderId);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
-        order_id: orderId,
-        action: "cancel",
+      const { data, error } = await supabase.rpc("transition_order", {
+        p_order_id: orderId,
+        p_new_status: "CANCELLED",
+        p_note: "Cancelled by customer",
       });
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? res.data.order : o))
-      );
+      if (error) throw error;
+
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, ...data, status: "CANCELLED" } : o)));
       toast({ title: "تم إلغاء الطلب" });
     } catch (e) {
-      toast({ title: "فشل الإلغاء", description: e.response?.data?.error || e.message, variant: "destructive" });
+      toast({ title: "فشل الإلغاء", description: e.message, variant: "destructive" });
     } finally {
       setCancelling(null);
     }
@@ -77,7 +91,7 @@ export default function MyOrders() {
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <p className="font-mono text-xs text-muted-foreground">#{order.id.slice(-8).toUpperCase()}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(order.created_date).toLocaleString("ar-SA")}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleString("ar-SA")}</p>
                   </div>
                   <StatusBadge status={order.status} />
                 </div>
@@ -98,11 +112,7 @@ export default function MyOrders() {
                         disabled={cancelling === order.id}
                         className="inline-flex items-center gap-1 px-3 h-9 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 disabled:opacity-50"
                       >
-                        {cancelling === order.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <X className="w-4 h-4" />
-                        )}
+                        {cancelling === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                         إلغاء
                       </button>
                     )}
