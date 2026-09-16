@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { STATUS_LABELS_AR } from "@/lib/orderStatus";
 import { History } from "lucide-react";
 
@@ -8,21 +8,38 @@ export default function OrderHistoryTimeline({ orderId }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!orderId) return;
     const fetchHistory = async () => {
       try {
-        const list = await base44.entities.OrderHistory.filter(
-          { order_id: orderId },
-          "created_date",
-          50
-        );
-        setHistory(list);
+        const { data, error } = await supabase
+          .from("order_history")
+          .select("*")
+          .eq("order_id", orderId)
+          .order("created_at", { ascending: true })
+          .limit(50);
+        if (error) throw error;
+        setHistory(data || []);
       } catch (e) {
-        // ignore
+        console.error(e);
       } finally {
         setLoading(false);
       }
     };
     fetchHistory();
+
+    const channel = supabase
+      .channel(`order-history-${orderId}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "order_history",
+        filter: `order_id=eq.${orderId}`,
+      }, (payload) => {
+        setHistory((prev) => prev.some((item) => item.id === payload.new.id) ? prev : [...prev, payload.new]);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [orderId]);
 
   if (loading || history.length === 0) return null;
@@ -39,24 +56,11 @@ export default function OrderHistoryTimeline({ orderId }) {
             <div className="w-2.5 h-2.5 rounded-full bg-primary flex-shrink-0 mt-1.5" />
             <div className="flex-1">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-foreground">
-                  {STATUS_LABELS_AR[h.new_status] || h.new_status}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(h.created_date).toLocaleString("ar-SA")}
-                </span>
+                <span className="text-sm font-medium text-foreground">{STATUS_LABELS_AR[h.new_status] || h.new_status}</span>
+                <span className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString("ar-SA")}</span>
               </div>
-              {h.performed_by_name && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  بواسطة: {h.performed_by_name}
-                  {h.performed_by_role && h.performed_by_role !== "customer" && ` (${h.performed_by_role})`}
-                </p>
-              )}
-              {h.note && (
-                <p className="text-xs text-muted-foreground mt-1 bg-muted rounded-lg px-2 py-1">
-                  {h.note}
-                </p>
-              )}
+              {h.performed_by_name && <p className="text-xs text-muted-foreground mt-0.5">بواسطة: {h.performed_by_name}{h.performed_by_role && h.performed_by_role !== "customer" && ` (${h.performed_by_role})`}</p>}
+              {h.note && <p className="text-xs text-muted-foreground mt-1 bg-muted rounded-lg px-2 py-1">{h.note}</p>}
             </div>
           </div>
         ))}
