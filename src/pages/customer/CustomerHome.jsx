@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import CustomerHeader from "@/components/CustomerHeader";
 import BottomNav from "@/components/BottomNav";
 import { useCart } from "@/lib/CartContext";
+import { supabase } from "@/lib/supabaseClient";
 import { Flame, Plus, Loader2, Package } from "lucide-react";
 import { Image } from "@/components/ui/image";
 
@@ -15,8 +15,14 @@ export default function CustomerHome() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const list = await base44.entities.Product.filter({ status: "ACTIVE" }, "-created_date", 50);
-        setProducts(list);
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("status", "ACTIVE")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (error) throw error;
+        setProducts(data || []);
       } catch (e) {
         console.error(e);
       } finally {
@@ -36,7 +42,6 @@ export default function CustomerHome() {
     <div className="min-h-screen bg-gray-50 pb-20">
       <CustomerHeader />
 
-      {/* Hero */}
       <div className="bg-gradient-to-l from-orange-500 to-amber-500 text-white">
         <div className="max-w-md mx-auto px-4 py-8">
           <h2 className="text-2xl font-bold mb-1">اطلب غازك وأوصله لباب بيتك</h2>
@@ -59,18 +64,10 @@ export default function CustomerHome() {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {products.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-2xl border border-border overflow-hidden flex flex-col"
-              >
+              <div key={product.id} className="bg-white rounded-2xl border border-border overflow-hidden flex flex-col">
                 <div className="aspect-square bg-gray-100 flex items-center justify-center">
                   {product.image ? (
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full"
-                      fittingType="fill"
-                    />
+                    <Image src={product.image} alt={product.name} className="w-full h-full" fittingType="fill" />
                   ) : (
                     <Flame className="w-12 h-12 text-orange-400" />
                   )}
@@ -82,27 +79,19 @@ export default function CustomerHome() {
                       {product.cylinder_type === "exchange" ? "استبدال" : "جديدة"}
                     </span>
                   )}
-                  {product.description && (
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{product.description}</p>
-                  )}
+                  {product.description && <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{product.description}</p>}
                   <div className="flex items-center justify-between mt-auto">
                     <span className="font-bold text-primary">{product.price} <span className="text-xs font-normal">ر.س</span></span>
                     <button
                       onClick={() => handleAdd(product)}
                       disabled={product.stock <= 0}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
-                        added[product.id]
-                          ? "bg-green-500 text-white"
-                          : "bg-primary text-primary-foreground hover:bg-primary/90"
-                      } disabled:opacity-50`}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${added[product.id] ? "bg-green-500 text-white" : "bg-primary text-primary-foreground hover:bg-primary/90"} disabled:opacity-50`}
                       aria-label="أضف للسلة"
                     >
                       {added[product.id] ? "✓" : <Plus className="w-5 h-5" />}
                     </button>
                   </div>
-                  {product.stock <= 0 && (
-                    <p className="text-xs text-red-500 mt-1">نفذت الكمية</p>
-                  )}
+                  {product.stock <= 0 && <p className="text-xs text-red-500 mt-1">نفذت الكمية</p>}
                 </div>
               </div>
             ))}
