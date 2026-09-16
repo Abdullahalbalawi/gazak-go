@@ -19,6 +19,12 @@ Responsive RTL gas-cylinder delivery application.
 - Smart Dispatch protects busy-driver routes and prevents an assignment that would move a new delivery ahead of the driver's latest planned ETA on the same route.
 - Returns and exchanges use a server-side transactional function.
 - GitHub Actions CI is configured for dependency installation, lint and production build.
+- GitHub Pages workflow builds a standalone customer demo with local demo data and no live payment processing.
+
+## Demo preview
+- Demo mode is enabled only by the GitHub Pages workflow via `VITE_DEMO_MODE=true`.
+- Demo orders are stored in the browser's local storage.
+- Live Supabase credentials are not embedded in the demo build.
 
 ## Deployment requirements
 1. Create a Supabase project.
@@ -29,4 +35,4 @@ Responsive RTL gas-cylinder delivery application.
 6. Configure a payment provider before enabling live CARD payments; CASH works without a payment gateway.
 
 ## Important
-The repository is code-complete for the migrated application, but a live deployment is not considered operational until the Supabase project, Auth settings, Edge Functions and required environment variables are configured and a production build passes CI.
+The repository contains the migrated application code and the Pages demo workflow. A live production deployment is not considered operational until the Supabase project, Auth settings, Edge Functions and required environment variables are configured and a production build passes CI.
