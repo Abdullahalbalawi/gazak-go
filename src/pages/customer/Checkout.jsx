@@ -9,5 +9,70 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, CreditCard, Banknote, CheckCircle2 } from "lucide-react";
-const DELIVERY_FEE=15;
-export default function Checkout(){const{user}=useAuth();const{items,subtotal,clearCart}=useCart();const navigate=useNavigate();const returnCount=items.filter(i=>i.cylinder_type==="exchange").reduce((s,i)=>s+i.quantity,0);const[phone,setPhone]=useState(user?.phone||""),[name,setName]=useState(user?.full_name||""),[address,setAddress]=useState(""),[latitude,setLatitude]=useState(null),[longitude,setLongitude]=useState(null),[paymentMethod,setPaymentMethod]=useState("CASH"),[submitting,setSubmitting]=useState(false),[error,setError]=useState("");const total=subtotal+DELIVERY_FEE;const submit=async e=>{e.preventDefault();setError("");if(!items.length)return setError("سلتك فارغة");if(!phone.trim()||!name.trim()||!address.trim())return setError("يرجى تعبئة جميع الحقول");if(!user?.id)return setError("يجب تسجيل الدخول أولاً");setSubmitting(true);try{const{error:pe}=await supabase.rpc("update_my_profile",{p_full_name:name.trim(),p_phone:phone.trim()});if(pe)throw pe;const{data:orderId,error:oe}=await supabase.rpc("create_order",{p_customer_name:name.trim(),p_customer_phone:phone.trim(),p_address:address.trim(),p_payment_method:paymentMethod,p_items:items.map(i=>({product_id:i.product_id,quantity:i.quantity})),p_delivery_fee:DELIVERY_FEE,p_latitude:latitude,p_longitude:longitude});if(oe)throw oe;if(!orderId)throw new Error("لم يتم إنشاء رقم الطلب");clearCart();navigate("/order-success/"+orderId)}catch(err){setError(err?.message||"فشل إنشاء الطلب")}finally{setSubmitting(false)}};if(!items.length)return <div className="min-h-screen bg-gray-50 pb-20"><CustomerHeader/><div className="max-w-md mx-auto px-4 py-16 text-center"><p className="text-muted-foreground mb-4">سلتك فارغة</p><Link to="/" className="text-primary font-medium">تصفح المنتجات</Link></div></div>;return <div className="min-h-screen bg-gray-50 pb-24"><CustomerHeader/><div className="max-w-md mx-auto px-4 py-4"><div className="flex items-center gap-2 mb-4"><Link to="/cart"><ArrowLeft className="w-5 h-5 rotate-180"/></Link><h2 className="font-bold text-lg">إتمام الطلب</h2></div><form onSubmit={submit} className="space-y-5"><div className="bg-white rounded-2xl border p-4 space-y-3"><h3 className="font-semibold text-sm">بيانات التواصل</h3><div><Label>رقم الجوال</Label><Input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} required/></div><div><Label>الاسم</Label><Input value={name} onChange={e=>setName(e.target.value)} required/></div></div><div className="bg-white rounded-2xl border p-4"><h3 className="font-semibold text-sm mb-3">عنوان التوصيل</h3><LocationPicker address={address} setAddress={setAddress} latitude={latitude} setLatitude={setLatitude} longitude={longitude} setLongitude={setLongitude}/></div><div className="bg-white rounded-2xl border p-4"><h3 className="font-semibold text-sm mb-3">مراجعة الطلب</h3>{items.map(i=><div key={i.product_id} className="flex justify-between text-sm"><span>{i.product_name} × {i.quantity}</span><span>{i.total} ر.س</span></div>)}{returnCount>0&&<div className="flex justify-between text-sm text-blue-600 font-medium pt-1"><span>أسطوانات فارغة للاستلام</span><span>{returnCount}</span></div>}<div className="border-t mt-3 pt-3 space-y-1 text-sm"><div className="flex justify-between"><span>الإجمالي الفرعي</span><span>{subtotal} ر.س</span></div><div className="flex justify-between"><span>رسوم التوصيل</span><span>{DELIVERY_FEE} ر.س</span></div><div className="flex justify-between font-bold"><span>الإجمالي</span><span className="text-primary">{total} ر.س</span></div></div></div><div className="bg-white rounded-2xl border p-4"><h3 className="font-semibold text-sm mb-3">طريقة الدفع</h3><div className="grid grid-cols-2 gap-3"><button type="button" onClick={()=>setPaymentMethod("CASH")} className={`p-4 rounded-xl border-2 ${paymentMethod==="CASH"?"border-primary bg-primary/5":"border-border"}`}><Banknote className="mx-auto mb-1"/><span className="text-sm">نقداً</span></button><button type="button" onClick={()=>setPaymentMethod("CARD")} className={`p-4 rounded-xl border-2 ${paymentMethod==="CARD"?"border-primary bg-primary/5":"border-border"}`}><CreditCard className="mx-auto mb-1"/><span className="text-sm">بطاقة</span></button></div></div>{error&&<div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}<Button type="submit" disabled={submitting} className="w-full h-14 text-base font-bold rounded-2xl">{submitting?<><Loader2 className="w-5 h-5 ml-2 animate-spin"/>جاري تأكيد الطلب...</>:<><CheckCircle2 className="w-5 h-5 ml-2"/>تأكيد الطلب — {total} ر.س</>}</Button></form></div></div>}
+
+const DELIVERY_FEE = 15;
+const CARD_PAYMENTS_ENABLED = import.meta.env.VITE_CARD_PAYMENTS_ENABLED === "true";
+
+export default function Checkout() {
+  const { user } = useAuth();
+  const { items, subtotal, clearCart } = useCart();
+  const navigate = useNavigate();
+  const returnCount = items.filter((i) => i.cylinder_type === "exchange").reduce((s, i) => s + i.quantity, 0);
+  const [phone, setPhone] = useState(user?.phone || "");
+  const [name, setName] = useState(user?.full_name || "");
+  const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const total = subtotal + DELIVERY_FEE;
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!items.length) return setError("سلتك فارغة");
+    if (!phone.trim() || !name.trim() || !address.trim()) return setError("يرجى تعبئة جميع الحقول");
+    if (!user?.id) return setError("يجب تسجيل الدخول أولاً");
+    if (paymentMethod === "CARD" && !CARD_PAYMENTS_ENABLED) return setError("الدفع الإلكتروني غير مفعّل حالياً");
+
+    setSubmitting(true);
+    try {
+      const { error: pe } = await supabase.rpc("update_my_profile", {
+        p_full_name: name.trim(),
+        p_phone: phone.trim(),
+      });
+      if (pe) throw pe;
+
+      const { data: orderId, error: oe } = await supabase.rpc("create_order", {
+        p_customer_name: name.trim(),
+        p_customer_phone: phone.trim(),
+        p_address: address.trim(),
+        p_payment_method: paymentMethod,
+        p_items: items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })),
+        p_delivery_fee: DELIVERY_FEE,
+        p_latitude: latitude,
+        p_longitude: longitude,
+      });
+      if (oe) throw oe;
+      if (!orderId) throw new Error("لم يتم إنشاء رقم الطلب");
+      clearCart();
+      navigate(`/order-success/${orderId}`);
+    } catch (err) {
+      setError(err?.message || "فشل إنشاء الطلب");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!items.length) return <div className="min-h-screen bg-gray-50 pb-20"><CustomerHeader /><div className="max-w-md mx-auto px-4 py-16 text-center"><p className="text-muted-foreground mb-4">سلتك فارغة</p><Link to="/" className="text-primary font-medium">تصفح المنتجات</Link></div></div>;
+
+  return <div className="min-h-screen bg-gray-50 pb-24"><CustomerHeader /><div className="max-w-md mx-auto px-4 py-4"><div className="flex items-center gap-2 mb-4"><Link to="/cart"><ArrowLeft className="w-5 h-5 rotate-180" /></Link><h2 className="font-bold text-lg">إتمام الطلب</h2></div><form onSubmit={submit} className="space-y-5">
+    <div className="bg-white rounded-2xl border p-4 space-y-3"><h3 className="font-semibold text-sm">بيانات التواصل</h3><div><Label>رقم الجوال</Label><Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required /></div><div><Label>الاسم</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div></div>
+    <div className="bg-white rounded-2xl border p-4"><h3 className="font-semibold text-sm mb-3">عنوان التوصيل</h3><LocationPicker address={address} setAddress={setAddress} latitude={latitude} setLatitude={setLatitude} longitude={longitude} setLongitude={setLongitude} /></div>
+    <div className="bg-white rounded-2xl border p-4"><h3 className="font-semibold text-sm mb-3">مراجعة الطلب</h3>{items.map((i) => <div key={i.product_id} className="flex justify-between text-sm"><span>{i.product_name} × {i.quantity}</span><span>{i.total} ر.س</span></div>)}{returnCount > 0 && <div className="flex justify-between text-sm text-blue-600 font-medium pt-1"><span>أسطوانات فارغة للاستلام</span><span>{returnCount}</span></div>}<div className="border-t mt-3 pt-3 space-y-1 text-sm"><div className="flex justify-between"><span>الإجمالي الفرعي</span><span>{subtotal} ر.س</span></div><div className="flex justify-between"><span>رسوم التوصيل</span><span>{DELIVERY_FEE} ر.س</span></div><div className="flex justify-between font-bold"><span>الإجمالي</span><span className="text-primary">{total} ر.س</span></div></div></div>
+    <div className="bg-white rounded-2xl border p-4"><h3 className="font-semibold text-sm mb-3">طريقة الدفع</h3><div className={`grid ${CARD_PAYMENTS_ENABLED ? "grid-cols-2" : "grid-cols-1"} gap-3`}><button type="button" onClick={() => setPaymentMethod("CASH")} className={`p-4 rounded-xl border-2 ${paymentMethod === "CASH" ? "border-primary bg-primary/5" : "border-border"}`}><Banknote className="mx-auto mb-1" /><span className="text-sm">نقداً عند الاستلام</span></button>{CARD_PAYMENTS_ENABLED && <button type="button" onClick={() => setPaymentMethod("CARD")} className={`p-4 rounded-xl border-2 ${paymentMethod === "CARD" ? "border-primary bg-primary/5" : "border-border"}`}><CreditCard className="mx-auto mb-1" /><span className="text-sm">بطاقة</span></button>}</div>{!CARD_PAYMENTS_ENABLED && <p className="text-xs text-muted-foreground mt-3">الدفع الإلكتروني سيظهر تلقائياً بعد ربط بوابة الدفع.</p>}</div>
+    {error && <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
+    <Button type="submit" disabled={submitting} className="w-full h-14 text-base font-bold rounded-2xl">{submitting ? <><Loader2 className="w-5 h-5 ml-2 animate-spin" />جاري تأكيد الطلب...</> : <><CheckCircle2 className="w-5 h-5 ml-2" />تأكيد الطلب — {total} ر.س</>}</Button>
+  </form></div></div>;
+}
