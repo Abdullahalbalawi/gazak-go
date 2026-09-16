@@ -1,23 +1,21 @@
 # Gazak Go
 
-Current source snapshot prepared for GitHub.
+Responsive RTL gas-cylinder delivery application.
 
-## Important
+## Current migration status
+The project is being migrated from Base44 to an independent stack based on Supabase + Vite/React.
 
-This repository is a source-code backup/development copy of the current Gazak Go project.
-The application currently contains dependencies on Base44 services (authentication,
-entities/database access, and backend functions). Uploading this repository to GitHub
-does not by itself make the application independent of Base44.
+### Completed
+- Supabase client added.
+- Authentication context migrated to Supabase Auth.
+- Login, registration and password recovery migrated to Supabase Auth.
+- Initial PostgreSQL schema and RLS migration added.
+- Environment template switched to Supabase variables.
 
-## Recommended migration path
+### In progress
+- Replace remaining Base44 entity/function calls with Supabase queries/RPC/Edge Functions.
+- Remove the Base44 Vite plugin and SDK completely.
+- Implement transactional order + inventory workflows.
+- Implement automated dispatch rules, including busy-driver and route-delay protection.
 
-1. Keep this repository as the source-control baseline.
-2. Verify the project builds locally.
-3. Gradually replace Base44 authentication, data access, and backend functions.
-4. Move the backend/database to an independent service such as Supabase.
-5. Deploy the frontend independently (for example, Vercel).
-6. Run end-to-end tests before discontinuing Base44.
-
-## Safety
-
-Never commit production API keys, service-role keys, passwords, or other secrets.
+Do not remove the remaining Base44 compatibility files until all application references have been migrated and verified.
