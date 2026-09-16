@@ -29,13 +29,13 @@ export const CANCELLABLE_STATUSES = ["NEW", "ACCEPTED", "PREPARING"];
 // انتقالات الحالة: من ← إلى، والأدوار المسموح لها
 export const TRANSITIONS = {
   accept:        { from: "NEW",      to: "ACCEPTED",         roles: ["distributor", "admin"] },
-  prepare:      { from: "ACCEPTED", to: "PREPARING",        roles: ["distributor", "admin"] },
-  ready:        { from: "PREPARING", to: "READY",            roles: ["distributor", "admin"] },
-  assign:       { from: "READY",    to: "ASSIGNED",         roles: ["admin"] },
-  startDelivery:{ from: "ASSIGNED", to: "OUT_FOR_DELIVERY", roles: ["driver", "admin"] },
-  arrive:       { from: "OUT_FOR_DELIVERY", to: "ARRIVED",   roles: ["driver", "admin"] },
-  deliver:      { from: "ARRIVED",  to: "DELIVERED",         roles: ["driver", "admin"] },
-  cancel:       { from: CANCELLABLE_STATUSES, to: "CANCELLED", roles: ["customer", "admin"] },
+  prepare:       { from: "ACCEPTED", to: "PREPARING",        roles: ["distributor", "admin"] },
+  ready:         { from: "PREPARING", to: "READY",            roles: ["distributor", "admin"] },
+  assign:        { from: "READY",    to: "ASSIGNED",         roles: ["distributor", "admin"] },
+  startDelivery: { from: "ASSIGNED", to: "OUT_FOR_DELIVERY", roles: ["driver", "admin"] },
+  arrive:        { from: "OUT_FOR_DELIVERY", to: "ARRIVED",   roles: ["driver", "admin"] },
+  deliver:       { from: "ARRIVED",  to: "DELIVERED",         roles: ["driver", "admin"] },
+  cancel:        { from: CANCELLABLE_STATUSES, to: "CANCELLED", roles: ["customer", "admin"] },
 };
 
 // نصوص إشعارات العميل عند تغير الحالة
