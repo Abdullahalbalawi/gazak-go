@@ -1,62 +1,32 @@
-# Base44 Project
+# Gazak Go
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+Responsive RTL gas-cylinder delivery application built with React/Vite and Supabase.
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+## Stack
+- React + Vite
+- Supabase Auth + PostgreSQL + RLS + Realtime
+- Supabase Edge Functions for privileged operations
 
-## Prerequisites
-
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
+## Local setup
+1. Copy `.env.example` to `.env.local`.
+2. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
-5. Install [Deno](https://docs.deno.com/runtime/getting_started/installation/) — the local Base44 backend runs on it.
+4. Apply SQL migrations in `supabase/migrations/` to your Supabase project.
+5. Deploy the Edge Functions in `supabase/functions/`.
+6. Run `npm run dev`.
 
-Run `base44 --help` (or see the [CLI reference](https://docs.base44.com/developers/references/cli/commands/introduction)) for the full command surface.
+## Order workflow
+`NEW → ACCEPTED → PREPARING → READY → ASSIGNED → OUT_FOR_DELIVERY → ARRIVED → DELIVERED`
 
-## Run Locally
+Cancellation is supported before delivery. Inventory is reserved transactionally when an order is created, released on cancellation, and consumed on delivery.
 
-Three commands, from the project root:
+## Smart Dispatch
+- Prevents assigning an active driver when it could conflict with an ongoing delivery.
+- Same-route batching is allowed only when the new delivery ETA is not earlier than the driver's latest existing ETA.
+- If no safe driver is available, dispatch is rejected rather than risking a delivery delay.
 
-```bash
-base44 login   # one-time per machine
-base44 link    # one-time per clone
-base44 dev     # local backend + frontend together
-```
+## Security
+Browser clients use only the Supabase anon key. Service-role credentials belong only in Supabase Edge Functions and must never be committed to the repository.
 
-Open the frontend URL that `base44 dev` prints (typically `http://localhost:5173`).
-
-Notes:
-
-- **Every fresh clone needs `base44 link`.** It writes `base44/.app.jsonc` (the app-id pointer), which is deliberately gitignored. Your app id is in the Builder URL (`app.base44.com/apps/<id>/...`); `base44 link --help` shows the non-interactive flags.
-- **`base44 dev` runs the frontend for you** (via `site.serveCommand` in this repo's `base44/config.jsonc`) — never run `npm run dev` yourself: alone it serves a UI with no backend behind it (`[base44] Proxy not enabled`, every `/api` call fails), and alongside `base44 dev` the second Vite silently takes the next port and you end up looking at the wrong one.
-- **The app must be published at least once for the UI to load under `base44 dev`.** The frontend boots by fetching app settings from the hosted app; before the first publish that fails and every page redirects to login. The local API works regardless.
-- Entities, functions, and auth run locally — entity data is **in-memory only**, wiped when `base44 dev` restarts. Everything else (Core integrations, OAuth login) is forwarded to your deployed app. Full breakdown: [Local development overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview).
-
-## Frontend Only, Hosted Backend
-
-To work on just the frontend against your app's live hosted backend:
-
-```bash
-base44 dev --remote
-```
-
-⚠️ In this mode writes go to your app's **production data** — plain `base44 dev` keeps everything local.
-
-## Publish Your Changes
-
-After pushing your changes to git, open the Base44 dashboard and publish the app:
-
-```bash
-base44 dashboard open
-```
-
-This repo syncs to Base44 through git, so publish from the dashboard rather than `base44 deploy` — a CLI deploy ships your local tree directly, bypassing the sync, and the deployed state silently diverges from the repo.
-
-## Docs & Support
-
-GitHub integration: [https://docs.base44.com/developers/app-code/local-development/github](https://docs.base44.com/developers/app-code/local-development/github)
-
-Local development: [https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+## CI
+GitHub Actions runs dependency installation, linting and production build checks on pushes and pull requests to `main`.
