@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { useCart } from "@/lib/CartContext";
 import CustomerHeader from "@/components/CustomerHeader";
@@ -40,36 +40,43 @@ export default function Checkout() {
       setError("يرجى تعبئة جميع الحقول");
       return;
     }
+    if (!user?.id) {
+      setError("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      // تحديث ملف المستخدم بالاسم والجوال إن لزم
-      if (user && (!user.phone || !user.full_name)) {
-        try {
-          await base44.auth.updateMe({ phone: phone.trim(), full_name: name.trim() });
-        } catch {
-          // غير حرج
-        }
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ phone: phone.trim(), full_name: name.trim() })
+        .eq("id", user.id);
+
+      if (profileError) {
+        console.warn("Could not update customer profile:", profileError.message);
       }
 
-      const res = await base44.functions.invoke("createOrder", {
-        items: items.map((i) => ({
+      const { data: orderId, error: orderError } = await supabase.rpc("create_order", {
+        p_customer_name: name.trim(),
+        p_customer_phone: phone.trim(),
+        p_address: address.trim(),
+        p_payment_method: paymentMethod,
+        p_items: items.map((i) => ({
           product_id: i.product_id,
           quantity: i.quantity,
         })),
-        customer_name: name.trim(),
-        customer_phone: phone.trim(),
-        address: address.trim(),
-        latitude,
-        longitude,
-        payment_method: paymentMethod,
+        p_delivery_fee: DELIVERY_FEE,
+        p_latitude: latitude,
+        p_longitude: longitude,
       });
 
-      const order = res.data.order;
+      if (orderError) throw orderError;
+      if (!orderId) throw new Error("لم يتم إنشاء رقم الطلب");
 
       clearCart();
-      navigate("/order-success/" + order.id);
+      navigate("/order-success/" + orderId);
     } catch (err) {
-      setError(err.response?.data?.error || err.message || "فشل إنشاء الطلب");
+      setError(err?.message || "فشل إنشاء الطلب");
     } finally {
       setSubmitting(false);
     }
@@ -99,48 +106,23 @@ export default function Checkout() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* بيانات العميل */}
           <div className="bg-white rounded-2xl border border-border p-4 space-y-3">
             <h3 className="font-semibold text-sm text-foreground">بيانات التواصل</h3>
             <div className="space-y-2">
               <Label htmlFor="phone">رقم الجوال</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="05xxxxxxxx"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="h-12"
-                required
-              />
+              <Input id="phone" type="tel" placeholder="05xxxxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-12" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">الاسم</Label>
-              <Input
-                id="name"
-                placeholder="الاسم الكامل"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="h-12"
-                required
-              />
+              <Input id="name" placeholder="الاسم الكامل" value={name} onChange={(e) => setName(e.target.value)} className="h-12" required />
             </div>
           </div>
 
-          {/* العنوان والموقع */}
           <div className="bg-white rounded-2xl border border-border p-4 space-y-3">
             <h3 className="font-semibold text-sm text-foreground">عنوان التوصيل</h3>
-            <LocationPicker
-              address={address}
-              setAddress={setAddress}
-              latitude={latitude}
-              setLatitude={setLatitude}
-              longitude={longitude}
-              setLongitude={setLongitude}
-            />
+            <LocationPicker address={address} setAddress={setAddress} latitude={latitude} setLatitude={setLatitude} longitude={longitude} setLongitude={setLongitude} />
           </div>
 
-          {/* مراجعة الطلب */}
           <div className="bg-white rounded-2xl border border-border p-4">
             <h3 className="font-semibold text-sm text-foreground mb-3">مراجعة الطلب</h3>
             <div className="space-y-2">
@@ -152,69 +134,38 @@ export default function Checkout() {
               ))}
               {returnCount > 0 && (
                 <div className="flex justify-between text-sm text-blue-600 font-medium pt-1">
-                  <span>أسطوانات فارغة للاستلام</span>
-                  <span>{returnCount}</span>
+                  <span>أسطوانات فارغة للاستلام</span><span>{returnCount}</span>
                 </div>
               )}
             </div>
             <div className="border-t border-border mt-3 pt-3 space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">الإجمالي الفرعي</span>
-                <span>{subtotal} ر.س</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">رسوم التوصيل</span>
-                <span>{DELIVERY_FEE} ر.س</span>
-              </div>
-              <div className="flex justify-between font-bold pt-1">
-                <span>الإجمالي</span>
-                <span className="text-primary">{total} ر.س</span>
-              </div>
+              <div className="flex justify-between"><span className="text-muted-foreground">الإجمالي الفرعي</span><span>{subtotal} ر.س</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">رسوم التوصيل</span><span>{DELIVERY_FEE} ر.س</span></div>
+              <div className="flex justify-between font-bold pt-1"><span>الإجمالي</span><span className="text-primary">{total} ر.س</span></div>
             </div>
           </div>
 
-          {/* طريقة الدفع */}
           <div className="bg-white rounded-2xl border border-border p-4">
             <h3 className="font-semibold text-sm text-foreground mb-3">طريقة الدفع</h3>
             <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("CASH")}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
-                  paymentMethod === "CASH" ? "border-primary bg-primary/5" : "border-border"
-                }`}
-              >
+              <button type="button" onClick={() => setPaymentMethod("CASH")} className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${paymentMethod === "CASH" ? "border-primary bg-primary/5" : "border-border"}`}>
                 <Banknote className={`w-7 h-7 ${paymentMethod === "CASH" ? "text-primary" : "text-muted-foreground"}`} />
                 <span className="text-sm font-medium">نقداً عند الاستلام</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("CARD")}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
-                  paymentMethod === "CARD" ? "border-primary bg-primary/5" : "border-border"
-                }`}
-              >
+              <button type="button" onClick={() => setPaymentMethod("CARD")} className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${paymentMethod === "CARD" ? "border-primary bg-primary/5" : "border-border"}`}>
                 <CreditCard className={`w-7 h-7 ${paymentMethod === "CARD" ? "text-primary" : "text-muted-foreground"}`} />
                 <span className="text-sm font-medium">بطاقة</span>
               </button>
             </div>
           </div>
 
-          {error && (
-            <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
-          )}
+          {error && <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
 
           <Button type="submit" disabled={submitting} className="w-full h-14 text-base font-bold rounded-2xl">
             {submitting ? (
-              <>
-                <Loader2 className="w-5 h-5 ml-2 animate-spin" />
-                جاري تأكيد الطلب...
-              </>
+              <><Loader2 className="w-5 h-5 ml-2 animate-spin" />جاري تأكيد الطلب...</>
             ) : (
-              <>
-                <CheckCircle2 className="w-5 h-5 ml-2" />
-                تأكيد الطلب — {total} ر.س
-              </>
+              <><CheckCircle2 className="w-5 h-5 ml-2" />تأكيد الطلب — {total} ر.س</>
             )}
           </Button>
         </form>
