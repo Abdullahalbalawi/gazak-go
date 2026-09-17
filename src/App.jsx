@@ -42,6 +42,8 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminProducts from '@/pages/admin/AdminProducts';
 import AdminInventory from '@/pages/admin/AdminInventory';
 
+const ROUTER_BASENAME = import.meta.env.VITE_GITHUB_PAGES === "true" ? "/gazak-go" : undefined;
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
@@ -101,12 +103,11 @@ const AuthenticatedApp = () => {
   );
 };
 
-
 function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
+        <Router basename={ROUTER_BASENAME}>
           <ScrollToTop />
           <CartProvider>
             <AuthenticatedApp />
