@@ -7,7 +7,7 @@ import StaffHeader from "@/components/StaffHeader";
 import StatusBadge from "@/components/StatusBadge";
 import OrderHistoryTimeline from "@/components/OrderHistoryTimeline";
 import ReturnExchangeDialog from "@/components/ReturnExchangeDialog";
-import {Loader2,MapPin,Phone,PackageCheck,Navigation,CheckCircle2,Truck,RotateCcw} from "lucide-react";
+import {Loader2,MapPin,Phone,Navigation,Truck,RotateCcw} from "lucide-react";
 import {toast} from "@/components/ui/use-toast";
 import {Button} from "@/components/ui/button";
 
