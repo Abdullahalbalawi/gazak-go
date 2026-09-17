@@ -12,7 +12,8 @@ async function startDemo(page) {
 
 async function createCashOrder(page, customerName) {
   await page.locator('[aria-label="أضف للسلة"]').first().click();
-  await page.getByRole('button', { name: /إتمام الطلب \(/ }).click();
+  await page.goto('/cart');
+  await page.getByText(/^إتمام الطلب \(/).click();
   await expect(page.getByRole('heading', { name: 'إتمام الطلب' })).toBeVisible();
   await page.locator('input[type="tel"]').fill('0500000099');
   await page.getByText('الاسم').locator('xpath=following::input[1]').fill(customerName);
@@ -78,9 +79,9 @@ test('Stage 21: products, inventory, users and Smart Dispatch edge cases', async
   await page.goto('/admin/products');
   await expect(page.getByRole('heading', { name: 'المنتجات' })).toBeVisible();
   await page.getByPlaceholder('اسم المنتج').fill('منتج اختبار Stage 21');
-  await page.getByPlaceholder('السعر').fill('35');
-  await page.getByPlaceholder('المخزون').fill('7');
-  await page.getByPlaceholder('حد المخزون').fill('2');
+  await page.getByPlaceholder('السعر', { exact: true }).fill('35');
+  await page.getByPlaceholder('المخزون', { exact: true }).fill('7');
+  await page.getByPlaceholder('حد المخزون', { exact: true }).fill('2');
   await page.getByRole('button', { name: 'حفظ' }).click();
   await expect(page.getByText('منتج اختبار Stage 21')).toBeVisible();
 
