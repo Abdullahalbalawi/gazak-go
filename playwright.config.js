@@ -8,14 +8,14 @@ export default defineConfig({
   workers: 1,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: 'http://127.0.0.1:4173/gazak-go/',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'VITE_DEMO_MODE=true VITE_GITHUB_PAGES=false VITE_CARD_PAYMENTS_ENABLED=false VITE_SUPABASE_URL=https://preview-placeholder.supabase.co VITE_SUPABASE_ANON_KEY=preview-placeholder-anon-key npm run dev -- --host 127.0.0.1 --port 4173',
-    url: 'http://127.0.0.1:4173/',
+    command: 'VITE_DEMO_MODE=true VITE_GITHUB_PAGES=true VITE_CARD_PAYMENTS_ENABLED=false VITE_SUPABASE_URL=https://preview-placeholder.supabase.co VITE_SUPABASE_ANON_KEY=preview-placeholder-anon-key npm run dev -- --host 127.0.0.1 --port 4173',
+    url: 'http://127.0.0.1:4173/gazak-go/',
     reuseExistingServer: false,
     timeout: 120_000,
   },
