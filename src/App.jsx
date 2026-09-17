@@ -60,14 +60,14 @@ const AuthenticatedApp = () => {
 
       {DEMO_MODE ? <>
         <Route path="/distributor" element={<DemoStaffRoute />} />
-        <Route path="/distributor/order/:id" element={<DemoStaffRoute />} />
-        <Route path="/distributor/custody" element={<DemoStaffRoute />} />
-        <Route path="/driver" element={<DemoStaffRoute />} />
+        <Route path="/distributor/order/:id" element={<DistributorOrderDetail />} />
+        <Route path="/distributor/custody" element={<DistributorCustody />} />
+        <Route path="/driver" element={<DriverDashboard />} />
         <Route path="/admin" element={<DemoStaffRoute />} />
-        <Route path="/admin/orders" element={<DemoStaffRoute />} />
-        <Route path="/admin/users" element={<DemoStaffRoute />} />
-        <Route path="/admin/products" element={<DemoStaffRoute />} />
-        <Route path="/admin/inventory" element={<DemoStaffRoute />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/products" element={<AdminProducts />} />
+        <Route path="/admin/inventory" element={<AdminInventory />} />
       </> : <>
         <Route path="/distributor" element={<RoleRoute allowedRoles={["distributor"]}><DistributorDashboard /></RoleRoute>} />
         <Route path="/distributor/order/:id" element={<RoleRoute allowedRoles={["distributor"]}><DistributorOrderDetail /></RoleRoute>} />
