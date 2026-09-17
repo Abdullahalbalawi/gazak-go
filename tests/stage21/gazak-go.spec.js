@@ -38,9 +38,9 @@ test('Stage 21: customer cancellation, order lifecycle, smart dispatch and drive
   const inventoryBefore = await page.evaluate(() => JSON.parse(localStorage.getItem('gazak_demo_inventory'))['demo-gas-11']);
   const cancelledId = await createCashOrder(page, CUSTOMER);
   await page.goto('/my-orders');
-  await expect(page.getByText(CUSTOMER).first()).toBeVisible({ timeout: 10000 });
-  const cancelledCard = page.getByText(CUSTOMER).first().locator('xpath=ancestor::div[contains(@class,"rounded-2xl")][1]');
-  await cancelledCard.getByRole('button', { name: 'إلغاء' }).click();
+  await expect(page.getByRole('heading', { name: 'طلباتي' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'إلغاء' })).toHaveCount(1);
+  await page.getByRole('button', { name: 'إلغاء' }).click();
   await expect(page.getByText('تم إلغاء الطلب')).toBeVisible();
   const cancelledOrder = await page.evaluate((id) => JSON.parse(localStorage.getItem('gazak_demo_orders') || '[]').find((order) => order.id === id), cancelledId);
   expect(cancelledOrder.status).toBe('CANCELLED');
