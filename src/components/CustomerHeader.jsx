@@ -1,17 +1,18 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
+import { DEMO_MODE } from "@/lib/demoMode";
 import { Flame, LogIn, LogOut, Bell } from "lucide-react";
 import { useCart } from "@/lib/CartContext";
 
 export default function CustomerHeader() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { count } = useCart();
 
-  const handleLogout = () => {
-    logout(false);
-    navigate("/login");
+  const handleLogout = async () => {
+    await logout();
+    navigate(DEMO_MODE ? "/" : "/login");
   };
 
   return (
@@ -24,28 +25,8 @@ export default function CustomerHeader() {
           <span className="font-bold text-lg text-foreground">غازك</span>
         </Link>
         <div className="flex items-center gap-1">
-          {isAuthenticated && (
-            <Link to="/notifications" className="relative p-2 rounded-lg hover:bg-muted">
-              <Bell className="w-5 h-5" />
-            </Link>
-          )}
-          {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-lg hover:bg-muted text-muted-foreground"
-              aria-label="تسجيل الخروج"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          ) : (
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-primary hover:bg-muted rounded-lg"
-            >
-              <LogIn className="w-4 h-4" />
-              دخول
-            </Link>
-          )}
+          {isAuthenticated && <Link to="/notifications" className="relative p-2 rounded-lg hover:bg-muted"><Bell className="w-5 h-5" />{count > 0 && <span className="sr-only">{count} منتجات في السلة</span>}</Link>}
+          {isAuthenticated ? <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-muted text-muted-foreground" aria-label="تسجيل الخروج"><LogOut className="w-5 h-5" /></button> : <Link to="/login" className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-primary hover:bg-muted rounded-lg"><LogIn className="w-4 h-4" />دخول</Link>}
         </div>
       </div>
     </header>
