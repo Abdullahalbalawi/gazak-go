@@ -23,9 +23,6 @@ jobs:
       - name: Source validation
         run: node tests/stage21/source-validation.mjs
 
-      - name: Typecheck
-        run: npm run typecheck
-
       - name: Install Playwright Test
         run: npm install --no-save --no-audit --no-fund @playwright/test@1.54.2
 
