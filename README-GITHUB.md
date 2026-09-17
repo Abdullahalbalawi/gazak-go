@@ -36,3 +36,6 @@ Responsive RTL gas-cylinder delivery application.
 
 ## Important
 The repository contains the migrated application code and the Pages demo workflow. A live production deployment is not considered operational until the Supabase project, Auth settings, Edge Functions and required environment variables are configured and a production build passes CI.
+
+## GitHub Pages
+The repository is configured to publish the demo through GitHub Actions at `/gazak-go/`.
