@@ -26,11 +26,14 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Install Playwright Test
+        run: npm install --no-save --no-audit --no-fund @playwright/test@1.54.2
+
       - name: Install Playwright Chromium
-        run: npx playwright@1.54.2 install --with-deps chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Run Stage 21 E2E
-        run: npx playwright@1.54.2 test --config=playwright.config.mjs
+        run: npx playwright test --config=playwright.config.mjs
 
       - name: Upload Playwright diagnostics
         if: failure()
