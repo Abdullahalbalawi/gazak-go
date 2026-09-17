@@ -33,6 +33,7 @@ jobs:
         run: npm run build
         env:
           VITE_DEMO_MODE: "true"
+          VITE_GITHUB_PAGES: "true"
           VITE_CARD_PAYMENTS_ENABLED: "false"
           VITE_SUPABASE_URL: https://preview-placeholder.supabase.co
           VITE_SUPABASE_ANON_KEY: preview-placeholder-anon-key
