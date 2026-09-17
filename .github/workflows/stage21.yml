@@ -1,0 +1,41 @@
+name: Gazak Go Stage 21 QA
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Source validation
+        run: node tests/stage21/source-validation.mjs
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Install Playwright Chromium
+        run: npx playwright@1.54.2 install --with-deps chromium
+
+      - name: Run Stage 21 E2E
+        run: npx playwright@1.54.2 test --config=playwright.config.mjs
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage21-playwright-diagnostics
+          path: test-results/
+          if-no-files-found: ignore
