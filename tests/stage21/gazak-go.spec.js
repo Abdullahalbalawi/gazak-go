@@ -41,7 +41,7 @@ test('Stage 21: customer cancellation, order lifecycle, smart dispatch and drive
   await expect(page.getByRole('heading', { name: 'طلباتي' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'إلغاء' })).toHaveCount(1);
   await page.getByRole('button', { name: 'إلغاء' }).click();
-  await expect(page.getByText('تم إلغاء الطلب')).toBeVisible();
+  await expect(page.getByText('تم إلغاء الطلب', { exact: true })).toBeVisible();
   const cancelledOrder = await page.evaluate((id) => JSON.parse(localStorage.getItem('gazak_demo_orders') || '[]').find((order) => order.id === id), cancelledId);
   expect(cancelledOrder.status).toBe('CANCELLED');
   const inventoryAfterCancel = await page.evaluate(() => JSON.parse(localStorage.getItem('gazak_demo_inventory'))['demo-gas-11']);
@@ -63,7 +63,7 @@ test('Stage 21: customer cancellation, order lifecycle, smart dispatch and drive
   const adminCard = orderCard(page, FLOW_CUSTOMER);
   await adminCard.locator('select').selectOption('demo-driver-001');
   await adminCard.getByRole('button', { name: 'إسناد' }).click();
-  await expect(page.getByText('تم الإسناد الذكي')).toBeVisible();
+  await expect(page.getByText('تم الإسناد الذكي', { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'السائق' }).click();
   await expect(page.getByText(FLOW_CUSTOMER)).toBeVisible();
@@ -106,7 +106,7 @@ test('Stage 21: products, inventory, users and Smart Dispatch edge cases', async
   await expect(page.getByText('عميل تجريبي')).toBeVisible();
 
   await page.goto('/admin');
-  await expect(page.getByText('الطلبات', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'الطلبات' })).toBeVisible();
 
   await page.evaluate(() => {
     const orders = JSON.parse(localStorage.getItem('gazak_demo_orders') || '[]');
@@ -122,7 +122,7 @@ test('Stage 21: products, inventory, users and Smart Dispatch edge cases', async
   const differentRoute = orderCard(page, 'عميل تجريبي 2');
   await differentRoute.locator('select').selectOption('demo-driver-001');
   await differentRoute.getByRole('button', { name: 'إسناد' }).click();
-  await expect(page.getByText('تم رفض الإسناد الذكي')).toBeVisible();
+  await expect(page.getByText('تم رفض الإسناد الذكي', { exact: true })).toBeVisible();
 
   await page.evaluate(() => {
     const orders = JSON.parse(localStorage.getItem('gazak_demo_orders') || '[]');
@@ -149,12 +149,12 @@ test('Stage 21: products, inventory, users and Smart Dispatch edge cases', async
   const readyCard = orderCard(page, 'عميل تجريبي 2');
   await readyCard.locator('select').selectOption('demo-driver-002');
   await readyCard.getByRole('button', { name: 'إسناد' }).click();
-  await expect(page.getByText('تم الإسناد الذكي')).toBeVisible();
+  await expect(page.getByText('تم الإسناد الذكي', { exact: true })).toBeVisible();
 
   const blockedCard = orderCard(page, 'طلب يجب رفض إسناده');
   await blockedCard.locator('select').selectOption('demo-driver-002');
   await blockedCard.getByRole('button', { name: 'إسناد' }).click();
-  await expect(page.getByText('تم رفض الإسناد الذكي')).toBeVisible();
+  await expect(page.getByText('تم رفض الإسناد الذكي', { exact: true })).toBeVisible();
 });
 
 test('Stage 21: authentication entry points render cleanly', async ({ page }) => {
