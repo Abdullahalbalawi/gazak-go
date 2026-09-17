@@ -1,11 +1,13 @@
 import { test, expect } from '@playwright/test';
 
 async function resetDemo(page) {
-  await page.addInitScript(() => {
+  await page.goto('/');
+  await page.evaluate(() => {
     localStorage.clear();
     localStorage.setItem('gazak_demo_role', 'customer');
   });
-  await page.goto('/');
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.getByText('المنتجات', { exact: true })).toBeVisible({ timeout: 15_000 });
 }
 
