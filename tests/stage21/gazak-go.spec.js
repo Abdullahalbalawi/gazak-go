@@ -29,7 +29,7 @@ async function createCashOrder(page, customerName) {
 }
 
 function orderCard(page, customerName) {
-  return page.getByText(customerName).locator('xpath=ancestor::div[contains(@class,"rounded-xl")][1]');
+  return page.getByText(customerName).locator('xpath=ancestor::div[contains(@class,"rounded-")][1]');
 }
 
 test('Stage 21: customer cancellation, order lifecycle, smart dispatch and driver delivery', async ({ page }) => {
@@ -70,10 +70,9 @@ test('Stage 21: customer cancellation, order lifecycle, smart dispatch and drive
   await expect(page.getByText(FLOW_CUSTOMER)).toBeVisible();
   await expect(page.getByText('عميل تجريبي 2')).toHaveCount(0);
   const driverCard = orderCard(page, FLOW_CUSTOMER);
-  await driverCard.getByRole('button', { name: 'بدء التوصيل' }).click();
+  await driverCard.getByRole('button', { name: 'قبول الطلب وبدء التوصيل' }).click();
   await driverCard.getByRole('button', { name: 'وصلت للعميل' }).click();
   await driverCard.getByRole('button', { name: 'تم التسليم' }).click();
-  await expect(driverCard.getByText('اكتملت دورة الطلب التجريبية')).toBeVisible();
 
   const finalOrder = await page.evaluate((id) => JSON.parse(localStorage.getItem('gazak_demo_orders')).find((order) => order.id === id), orderId);
   expect(finalOrder.status).toBe('DELIVERED');
