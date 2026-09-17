@@ -1,12 +1,15 @@
 export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 
-export const DEMO_USER = {
-  id: "demo-customer-001",
-  email: "demo@gazak-go.local",
-  phone: "0500000000",
-  full_name: "عميل تجريبي",
-  role: "customer",
+export const DEMO_ROLE_KEY = "gazak_demo_role";
+
+export const DEMO_USERS = {
+  customer: { id: "demo-customer-001", email: "demo@gazak-go.local", phone: "0500000000", full_name: "عميل تجريبي", role: "customer" },
+  distributor: { id: "demo-distributor-001", email: "distributor@gazak-go.local", phone: "0500000001", full_name: "موزع تجريبي", role: "distributor" },
+  driver: { id: "demo-driver-001", email: "driver@gazak-go.local", phone: "0500000002", full_name: "سائق تجريبي", role: "driver" },
+  admin: { id: "demo-admin-001", email: "admin@gazak-go.local", phone: "0500000003", full_name: "مدير تجريبي", role: "admin" },
 };
+
+export const DEMO_USER = DEMO_USERS.customer;
 
 export const DEMO_PRODUCTS = [
   { id: "demo-gas-11", name: "أسطوانة غاز 11 كجم", price: 25, stock: 20, cylinder_type: "new", description: "أسطوانة غاز للاستخدام المنزلي" },
@@ -15,9 +18,90 @@ export const DEMO_PRODUCTS = [
 ];
 
 const ORDERS_KEY = "gazak_demo_orders";
+const SEEDED_KEY = "gazak_demo_seeded";
+
+export function getDemoRole() {
+  try {
+    const role = localStorage.getItem(DEMO_ROLE_KEY);
+    return DEMO_USERS[role] ? role : "customer";
+  } catch {
+    return "customer";
+  }
+}
+
+export function setDemoRole(role) {
+  if (!DEMO_USERS[role]) return;
+  localStorage.setItem(DEMO_ROLE_KEY, role);
+  window.dispatchEvent(new CustomEvent("gazak-demo-role-changed", { detail: role }));
+}
+
+export function getDemoUser() {
+  return DEMO_USERS[getDemoRole()];
+}
+
+export function getDemoDrivers() {
+  return [
+    { ...DEMO_USERS.driver, active: true },
+    { id: "demo-driver-002", email: "driver2@gazak-go.local", phone: "0500000004", full_name: "سائق احتياطي", role: "driver", active: true },
+  ];
+}
+
+function nowPlusMinutes(minutes) {
+  return new Date(Date.now() + minutes * 60 * 1000).toISOString();
+}
+
+function seedDemoData() {
+  if (localStorage.getItem(SEEDED_KEY)) return;
+  const seeded = [
+    {
+      id: "DEMO-SEED-READY",
+      customer_id: DEMO_USERS.customer.id,
+      customer_name: "عميل تجريبي 2",
+      customer_phone: "0500000010",
+      address: "العلا - وسط المدينة",
+      latitude: 26.6089,
+      longitude: 37.9232,
+      payment_method: "CASH",
+      status: "READY",
+      route_group: "ALULA-CENTER",
+      estimated_delivery_at: nowPlusMinutes(90),
+      subtotal: 25,
+      delivery_fee: 15,
+      total: 40,
+      created_at: new Date().toISOString(),
+      items: [{ product_id: DEMO_PRODUCTS[0].id, product_name: DEMO_PRODUCTS[0].name, price: 25, quantity: 1, total: 25, cylinder_type: "new" }],
+    },
+    {
+      id: "DEMO-SEED-ACTIVE",
+      customer_id: "demo-customer-002",
+      customer_name: "عميل على المسار",
+      customer_phone: "0500000011",
+      address: "العلا - حي الجامعة",
+      latitude: 26.6101,
+      longitude: 37.9251,
+      payment_method: "CASH",
+      status: "OUT_FOR_DELIVERY",
+      route_group: "ALULA-CENTER",
+      estimated_delivery_at: nowPlusMinutes(45),
+      subtotal: 45,
+      delivery_fee: 15,
+      total: 60,
+      created_at: new Date().toISOString(),
+      driver_id: DEMO_USERS.driver.id,
+      items: [{ product_id: DEMO_PRODUCTS[1].id, product_name: DEMO_PRODUCTS[1].name, price: 45, quantity: 1, total: 45, cylinder_type: "new" }],
+    },
+  ];
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(seeded));
+  localStorage.setItem(SEEDED_KEY, "true");
+}
 
 export function getDemoOrders() {
-  try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]"); } catch { return []; }
+  try {
+    seedDemoData();
+    return JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
+  } catch {
+    return [];
+  }
 }
 
 export function getDemoOrder(id) {
@@ -28,7 +112,7 @@ export function createDemoOrder({ name, phone, address, latitude, longitude, pay
   const subtotal = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
   const order = {
     id: `DEMO-${Date.now()}`,
-    customer_id: DEMO_USER.id,
+    customer_id: DEMO_USERS.customer.id,
     customer_name: name,
     customer_phone: phone,
     address,
@@ -36,6 +120,8 @@ export function createDemoOrder({ name, phone, address, latitude, longitude, pay
     longitude,
     payment_method: paymentMethod,
     status: "NEW",
+    route_group: "ALULA-CENTER",
+    estimated_delivery_at: nowPlusMinutes(90),
     subtotal,
     delivery_fee: deliveryFee,
     total: subtotal + deliveryFee,
@@ -47,7 +133,53 @@ export function createDemoOrder({ name, phone, address, latitude, longitude, pay
 }
 
 export function cancelDemoOrder(id) {
-  const orders = getDemoOrders().map((order) => order.id === id ? { ...order, status: "CANCELLED" } : order);
+  return updateDemoOrder(id, { status: "CANCELLED", cancelled_at: new Date().toISOString() });
+}
+
+export function transitionDemoOrder(id, newStatus, actorRole) {
+  const orders = getDemoOrders();
+  const order = orders.find((item) => item.id === id);
+  if (!order) throw new Error("الطلب غير موجود");
+  const transitions = {
+    customer: { NEW: ["CANCELLED"], ACCEPTED: ["CANCELLED"], PREPARING: ["CANCELLED"] },
+    distributor: { NEW: ["ACCEPTED"], ACCEPTED: ["PREPARING"], PREPARING: ["READY"] },
+    admin: { NEW: ["ACCEPTED", "PREPARING", "READY", "CANCELLED"], ACCEPTED: ["PREPARING", "READY", "CANCELLED"], PREPARING: ["READY", "CANCELLED"], READY: ["CANCELLED"] },
+    driver: { ASSIGNED: ["OUT_FOR_DELIVERY"], OUT_FOR_DELIVERY: ["ARRIVED"], ARRIVED: ["DELIVERED"] },
+  };
+  if (!transitions[actorRole]?.[order.status]?.includes(newStatus)) throw new Error("انتقال الحالة غير مسموح بهذا الدور");
+  return updateDemoOrder(id, { status: newStatus, updated_at: new Date().toISOString() });
+}
+
+export function assignDemoOrderSmart(id, driverId) {
+  const orders = getDemoOrders();
+  const order = orders.find((item) => item.id === id);
+  if (!order) throw new Error("الطلب غير موجود");
+  if (order.status !== "READY") throw new Error("يمكن إسناد الطلبات الجاهزة فقط");
+  const driver = getDemoDrivers().find((item) => item.id === driverId);
+  if (!driver) throw new Error("السائق غير موجود أو غير نشط");
+  const active = orders.filter((item) => item.driver_id === driverId && ["ASSIGNED", "OUT_FOR_DELIVERY", "ARRIVED"].includes(item.status));
+  if (active.length) {
+    const latest = active.reduce((a, b) => new Date(a.estimated_delivery_at || 0) > new Date(b.estimated_delivery_at || 0) ? a : b);
+    if (order.route_group !== latest.route_group) throw new Error("السائق لديه طلب جارٍ على مسار مختلف؛ الإسناد سيؤدي إلى تعارض");
+    if (!order.estimated_delivery_at || !latest.estimated_delivery_at) throw new Error("لا يمكن التحقق من ETA للإسناد الذكي");
+    if (new Date(order.estimated_delivery_at) < new Date(latest.estimated_delivery_at)) throw new Error("تم رفض الإسناد: الطلب الجديد سيؤخر طلبًا قائمًا على نفس المسار");
+  }
+  return updateDemoOrder(id, { driver_id: driverId, status: "ASSIGNED", assigned_at: new Date().toISOString() });
+}
+
+function updateDemoOrder(id, patch) {
+  const orders = getDemoOrders().map((order) => order.id === id ? { ...order, ...patch } : order);
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-  return getDemoOrder(id);
+  return orders.find((order) => order.id === id) || null;
+}
+
+export function getDemoStats() {
+  const orders = getDemoOrders();
+  return {
+    new: orders.filter((o) => o.status === "NEW").length,
+    inProgress: orders.filter((o) => ["ACCEPTED", "PREPARING", "READY", "ASSIGNED"].includes(o.status)).length,
+    outForDelivery: orders.filter((o) => ["OUT_FOR_DELIVERY", "ARRIVED"].includes(o.status)).length,
+    completed: orders.filter((o) => o.status === "DELIVERED").length,
+    cancelled: orders.filter((o) => o.status === "CANCELLED").length,
+  };
 }
