@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 async function resetDemo(page) {
+  page.on('pageerror', (error) => console.log(`[STAGE21_PAGEERROR] ${error.message}`));
+  page.on('console', (message) => {
+    if (message.type() === 'error') console.log(`[STAGE21_CONSOLE] ${message.text()}`);
+  });
+
   await page.goto('/');
   await page.evaluate(() => {
     localStorage.clear();
@@ -8,6 +13,13 @@ async function resetDemo(page) {
   });
   await page.reload();
   await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(500);
+
+  console.log(`[STAGE21_URL] ${page.url()}`);
+  console.log(`[STAGE21_TITLE] ${await page.title()}`);
+  console.log(`[STAGE21_BODY] ${(await page.locator('body').innerText()).slice(0, 3000)}`);
+  console.log(`[STAGE21_ROOT_HTML] ${(await page.locator('#root').innerHTML()).slice(0, 3000)}`);
+  await expect(page.locator('#root')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('المنتجات', { exact: true })).toBeVisible({ timeout: 15_000 });
 }
 
