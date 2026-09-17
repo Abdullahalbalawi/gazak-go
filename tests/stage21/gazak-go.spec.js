@@ -66,13 +66,14 @@ test('Stage 21: customer cancellation, order lifecycle, smart dispatch and drive
   await adminCard.getByRole('button', { name: 'إسناد' }).click();
   await expect(page.getByText('تم الإسناد الذكي', { exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: 'السائق' }).click();
+  await page.goto('/driver');
   await expect(page.getByText(FLOW_CUSTOMER)).toBeVisible();
   await expect(page.getByText('عميل تجريبي 2')).toHaveCount(0);
-  const driverCard = orderCard(page, FLOW_CUSTOMER);
-  await driverCard.getByRole('button', { name: 'قبول الطلب وبدء التوصيل' }).click();
-  await driverCard.getByRole('button', { name: 'وصلت للعميل' }).click();
-  await driverCard.getByRole('button', { name: 'تم التسليم' }).click();
+  await page.getByRole('button', { name: 'قبول الطلب وبدء التوصيل' }).click();
+  await expect(page.getByRole('button', { name: 'وصلت للعميل' })).toBeVisible();
+  await page.getByRole('button', { name: 'وصلت للعميل' }).click();
+  await expect(page.getByRole('button', { name: 'تم التسليم' })).toBeVisible();
+  await page.getByRole('button', { name: 'تم التسليم' }).click();
 
   const finalOrder = await page.evaluate((id) => JSON.parse(localStorage.getItem('gazak_demo_orders')).find((order) => order.id === id), orderId);
   expect(finalOrder.status).toBe('DELIVERED');
