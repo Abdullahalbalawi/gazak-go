@@ -49,6 +49,7 @@ test('Stage 21: customer cancellation, order lifecycle, smart dispatch and drive
 
   await page.goto('/');
   const orderId = await createCashOrder(page, FLOW_CUSTOMER);
+  await page.goto('/');
 
   await page.getByRole('button', { name: 'الموزع' }).click();
   await expect(page.getByText('لوحة الموزع التجريبية')).toBeVisible();
