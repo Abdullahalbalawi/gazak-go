@@ -66,7 +66,8 @@ test('Stage 21: customer cancellation, order lifecycle, smart dispatch and drive
   await adminCard.getByRole('button', { name: 'إسناد' }).click();
   await expect(page.getByText('تم الإسناد الذكي', { exact: true })).toBeVisible();
 
-  await page.goto('/driver');
+  // Switch the demo session to the driver role before opening the real driver dashboard.
+  await page.getByRole('button', { name: 'السائق' }).click();
   await expect(page.getByText(FLOW_CUSTOMER)).toBeVisible();
   await expect(page.getByText('عميل تجريبي 2')).toHaveCount(0);
   await page.getByRole('button', { name: 'قبول الطلب وبدء التوصيل' }).click();
