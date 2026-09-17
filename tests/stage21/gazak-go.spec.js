@@ -106,7 +106,7 @@ test('Stage 21: products, inventory, users and Smart Dispatch edge cases', async
   await expect(page.getByText('عميل تجريبي')).toBeVisible();
 
   await page.goto('/admin');
-  await expect(page.getByRole('heading', { name: 'الطلبات' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'الطلبات', exact: true })).toBeVisible();
 
   await page.evaluate(() => {
     const orders = JSON.parse(localStorage.getItem('gazak_demo_orders') || '[]');
