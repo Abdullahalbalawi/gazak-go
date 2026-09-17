@@ -14,17 +14,10 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run dev -- --host 127.0.0.1 --port 4173',
+    command: 'VITE_DEMO_MODE=true VITE_GITHUB_PAGES=false VITE_CARD_PAYMENTS_ENABLED=false VITE_SUPABASE_URL=https://preview-placeholder.supabase.co VITE_SUPABASE_ANON_KEY=preview-placeholder-anon-key npm run dev -- --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173/',
     reuseExistingServer: false,
     timeout: 120_000,
-    env: {
-      VITE_DEMO_MODE: 'true',
-      VITE_GITHUB_PAGES: 'false',
-      VITE_CARD_PAYMENTS_ENABLED: 'false',
-      VITE_SUPABASE_URL: 'https://preview-placeholder.supabase.co',
-      VITE_SUPABASE_ANON_KEY: 'preview-placeholder-anon-key',
-    },
   },
   projects: [
     {
