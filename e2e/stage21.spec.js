@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 async function resetDemo(page) {
+  await page.addInitScript(() => {
+    localStorage.clear();
+    localStorage.setItem('gazak_demo_role', 'customer');
+  });
   await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await expect(page.getByText('المنتجات', { exact: true })).toBeVisible();
+  await expect(page.getByText('المنتجات', { exact: true })).toBeVisible({ timeout: 15_000 });
 }
 
 async function switchRole(page, label, path) {
@@ -38,6 +40,7 @@ test.describe('Stage 21 - final demo end-to-end', () => {
     await expect(page.getByText('قيد الانتظار', { exact: true })).toBeVisible();
     await page.getByRole('link', { name: /متابعة الطلب/ }).click();
     await expect(page).toHaveURL(new RegExp(`/track-order/${orderId}$`));
+    await expect(page.getByText('متابعة الطلب', { exact: true })).toBeVisible();
 
     await page.getByRole('link', { name: 'طلباتي', exact: true }).click();
     await expect(page.getByText('طلباتي', { exact: true })).toBeVisible();
