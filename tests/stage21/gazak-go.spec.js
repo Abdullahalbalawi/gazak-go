@@ -51,6 +51,7 @@ test('Stage 21: customer cancellation, order lifecycle, smart dispatch and drive
   await distributorCard.getByRole('button', { name: 'بدء التجهيز' }).click();
   await distributorCard.getByRole('button', { name: 'جاهز للتوصيل' }).click();
 
+  await page.goto('/');
   await page.getByRole('button', { name: 'المدير' }).click();
   await expect(page.getByText('لوحة الإدارة التجريبية')).toBeVisible();
   const adminCard = orderCard(page, FLOW_CUSTOMER);
