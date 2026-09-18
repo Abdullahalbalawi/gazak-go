@@ -113,8 +113,9 @@ test.describe('Stage 21 - final demo end-to-end', () => {
     await expect(page.getByText('عميل تجريبي 2', { exact: true })).toBeVisible();
     await expect(page.getByText('طلب يجب رفض إسناده', { exact: true })).toHaveCount(0);
 
-    const assigned = page.locator('div.border.rounded-xl.p-4').filter({ hasText: 'عميل تجريبي 2' }).first();
-    await assigned.getByRole('button', { name: 'بدء التوصيل', exact: true }).click();
+    const assigned = page.getByText('عميل تجريبي 2', { exact: true }).locator('xpath=ancestor::div[contains(@class,"rounded-2xl")][1]');
+    await expect(assigned).toBeVisible();
+    await assigned.getByRole('button', { name: 'قبول الطلب وبدء التوصيل', exact: true }).click();
     await expect(assigned.getByText('خرج للتوصيل', { exact: true })).toBeVisible();
     await assigned.getByRole('button', { name: 'وصلت للعميل', exact: true }).click();
     await expect(assigned.getByText('وصل السائق', { exact: true })).toBeVisible();
