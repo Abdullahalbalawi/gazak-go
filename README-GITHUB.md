@@ -35,7 +35,7 @@ Responsive RTL gas-cylinder delivery application.
 - Live Supabase credentials are not embedded in the demo build.
 
 ## Deployment requirements
-1. The project `gazak-go` is provisioned in Supabase and the repository migrations through `017` have been applied.
+1. The project `gazak-go` is provisioned in Supabase and the repository migrations through `018` have been applied.
 2. The Edge Function `admin-create-user` is deployed with JWT verification enabled.
 3. Configure the hosting environment with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 4. Configure email confirmation/reset URLs in Supabase Auth.
@@ -48,4 +48,4 @@ The repository contains the migrated application code and the Pages demo workflo
 The repository is configured to publish the demo through GitHub Actions at `/gazak-go/`.
 
 ## Stage 22 — Supabase production setup
-The repository includes the production setup runbook at `docs/SUPABASE-PRODUCTION-SETUP.md`. The live Supabase project is provisioned and the database migrations through `017` plus `admin-create-user` Edge Function are deployed. Final closure still requires real Auth accounts and end-to-end production validation.
+The repository includes the production setup runbook at `docs/SUPABASE-PRODUCTION-SETUP.md`. The live Supabase project is provisioned and the database migrations through `018` plus `admin-create-user` Edge Function are deployed. Final closure still requires real Auth accounts and end-to-end production validation.
