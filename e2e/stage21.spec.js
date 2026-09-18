@@ -57,7 +57,7 @@ test.describe('Stage 21 - final demo end-to-end', () => {
     await expect(page.getByText('متابعة الطلب', { exact: true })).toBeVisible();
 
     await page.getByRole('link', { name: 'طلباتي', exact: true }).click();
-    await expect(page.getByText('طلباتي', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'طلباتي', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'إلغاء', exact: true }).first().click();
     await expect(page.getByText('تم إلغاء الطلب', { exact: true })).toBeVisible();
 
