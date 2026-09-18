@@ -1,4 +1,5 @@
 name: Deploy Gazak Go to GitHub Pages
+# GitHub Pages deployment verified after enabling Actions as the Pages source.
 
 on:
   push:
