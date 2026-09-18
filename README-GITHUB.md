@@ -47,3 +47,6 @@ The repository contains the migrated application code and the Pages demo workflo
 
 ## GitHub Pages
 The repository is configured to publish the demo through GitHub Actions at `/gazak-go/`.
+
+## Stage 22 — Supabase production setup
+The repository now includes a production Supabase setup runbook at `docs/SUPABASE-PRODUCTION-SETUP.md`. The remaining environment-specific work is to connect the real Supabase project, apply the migrations, configure Auth/Edge Functions, and execute production E2E/RLS validation.
