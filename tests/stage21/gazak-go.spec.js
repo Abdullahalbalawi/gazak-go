@@ -68,13 +68,15 @@ test('Stage 21: customer cancellation, order lifecycle, smart dispatch and drive
 
   // Switch the demo session to the driver role before opening the real driver dashboard.
   await page.getByRole('button', { name: 'السائق' }).click();
-  await expect(page.getByText(FLOW_CUSTOMER)).toBeVisible();
-  await expect(page.getByText('عميل تجريبي 2')).toHaveCount(0);
-  await page.getByRole('button', { name: 'قبول الطلب وبدء التوصيل' }).click();
-  await expect(page.getByRole('button', { name: 'وصلت للعميل' })).toBeVisible();
-  await page.getByRole('button', { name: 'وصلت للعميل' }).click();
-  await expect(page.getByRole('button', { name: 'تم التسليم' })).toBeVisible();
-  await page.getByRole('button', { name: 'تم التسليم' }).click();
+  await expect(page.getByText('لوحة السائق التجريبية')).toBeVisible();
+  const driverCard = orderCard(page, FLOW_CUSTOMER);
+  await expect(driverCard).toBeVisible();
+  await expect(driverCard.getByRole('button', { name: 'قبول الطلب وبدء التوصيل' })).toBeVisible();
+  await driverCard.getByRole('button', { name: 'قبول الطلب وبدء التوصيل' }).click();
+  await expect(driverCard.getByRole('button', { name: 'وصلت للعميل' })).toBeVisible();
+  await driverCard.getByRole('button', { name: 'وصلت للعميل' }).click();
+  await expect(driverCard.getByRole('button', { name: 'تم التسليم' })).toBeVisible();
+  await driverCard.getByRole('button', { name: 'تم التسليم' }).click();
 
   const finalOrder = await page.evaluate((id) => JSON.parse(localStorage.getItem('gazak_demo_orders')).find((order) => order.id === id), orderId);
   expect(finalOrder.status).toBe('DELIVERED');
