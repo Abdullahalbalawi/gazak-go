@@ -1,4 +1,4 @@
-name: Gazak Go Pages Preview
+name: Gazak Go Pages Production
 
 on:
   push:
@@ -29,14 +29,14 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Build demo preview
+      - name: Build production app
         run: npm run build
         env:
-          VITE_DEMO_MODE: "true"
+          VITE_DEMO_MODE: "false"
           VITE_GITHUB_PAGES: "true"
           VITE_CARD_PAYMENTS_ENABLED: "false"
-          VITE_SUPABASE_URL: https://preview-placeholder.supabase.co
-          VITE_SUPABASE_ANON_KEY: preview-placeholder-anon-key
+          VITE_SUPABASE_URL: https://uxpzhhyqdbucfnsdtygq.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_8BJ7MDi3tndWBrMIqu86fg_1ssXkFNH
 
       - name: SPA fallback
         run: cp dist/index.html dist/404.html
