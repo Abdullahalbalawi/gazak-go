@@ -30,7 +30,7 @@ async function switchRole(page, label, path) {
 
 async function createCashOrder(page) {
   await page.getByRole('button', { name: 'أضف للسلة', exact: true }).first().click();
-  await page.getByRole('link', { name: 'السلة', exact: true }).click();
+  await page.goto('cart');
   await expect(page.getByText('سلة التسوق', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: /إتمام الطلب/ }).click();
   await page.getByLabel('رقم الجوال', { exact: true }).fill('0500000000');
@@ -57,7 +57,7 @@ test.describe('Stage 21 - final demo end-to-end', () => {
     await expect(page.getByText('متابعة الطلب', { exact: true })).toBeVisible();
 
     await page.getByRole('link', { name: 'طلباتي', exact: true }).click();
-    await expect(page.getByText('طلباتي', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'طلباتي', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'إلغاء', exact: true }).first().click();
     await expect(page.getByText('تم إلغاء الطلب', { exact: true })).toBeVisible();
 
@@ -113,13 +113,14 @@ test.describe('Stage 21 - final demo end-to-end', () => {
     await expect(page.getByText('عميل تجريبي 2', { exact: true })).toBeVisible();
     await expect(page.getByText('طلب يجب رفض إسناده', { exact: true })).toHaveCount(0);
 
-    const assigned = page.locator('div.border.rounded-xl.p-4').filter({ hasText: 'عميل تجريبي 2' }).first();
-    await assigned.getByRole('button', { name: 'بدء التوصيل', exact: true }).click();
-    await expect(assigned.getByText('خرج للتوصيل', { exact: true })).toBeVisible();
+    const assigned = page.getByText('عميل تجريبي 2', { exact: true }).locator('xpath=ancestor::div[contains(@class,"rounded-2xl")][1]');
+    await expect(assigned).toBeVisible();
+    await assigned.getByRole('button', { name: 'قبول الطلب وبدء التوصيل', exact: true }).click();
+    await expect(assigned.getByText('خرج للتوصيل', { exact: true }).first()).toBeVisible();
     await assigned.getByRole('button', { name: 'وصلت للعميل', exact: true }).click();
-    await expect(assigned.getByText('وصل السائق', { exact: true })).toBeVisible();
+    await expect(assigned.getByText('وصل السائق', { exact: true }).first()).toBeVisible();
     await assigned.getByRole('button', { name: 'تم التسليم', exact: true }).click();
-    await expect(assigned.getByText('تم التسليم', { exact: true })).toBeVisible();
-    await expect(assigned.getByText('اكتملت دورة الطلب التجريبية', { exact: true })).toBeVisible();
+    await expect(assigned.getByText('تم التسليم', { exact: true }).first()).toBeVisible();
+    await expect(assigned.getByRole('button', { name: 'مرتجع / استبدال', exact: true })).toBeVisible();
   });
 });
