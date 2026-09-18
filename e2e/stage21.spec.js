@@ -30,7 +30,7 @@ async function switchRole(page, label, path) {
 
 async function createCashOrder(page) {
   await page.getByRole('button', { name: 'أضف للسلة', exact: true }).first().click();
-  await page.goto('/cart');
+  await page.goto('cart');
   await expect(page.getByText('سلة التسوق', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: /إتمام الطلب/ }).click();
   await page.getByLabel('رقم الجوال', { exact: true }).fill('0500000000');
@@ -121,6 +121,6 @@ test.describe('Stage 21 - final demo end-to-end', () => {
     await expect(assigned.getByText('وصل السائق', { exact: true }).first()).toBeVisible();
     await assigned.getByRole('button', { name: 'تم التسليم', exact: true }).click();
     await expect(assigned.getByText('تم التسليم', { exact: true }).first()).toBeVisible();
-    await expect(assigned.getByText('اكتملت دورة الطلب التجريبية', { exact: true })).toBeVisible();
+    await expect(assigned.getByRole('button', { name: 'مرتجع / استبدال', exact: true })).toBeVisible();
   });
 });
