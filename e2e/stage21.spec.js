@@ -30,7 +30,7 @@ async function switchRole(page, label, path) {
 
 async function createCashOrder(page) {
   await page.getByRole('button', { name: 'أضف للسلة', exact: true }).first().click();
-  await page.getByRole('link', { name: 'السلة', exact: true }).click();
+  await page.getByRole('link', { name: /السلة/ }).click();
   await expect(page.getByText('سلة التسوق', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: /إتمام الطلب/ }).click();
   await page.getByLabel('رقم الجوال', { exact: true }).fill('0500000000');
