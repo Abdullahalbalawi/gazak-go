@@ -35,12 +35,11 @@ Responsive RTL gas-cylinder delivery application.
 - Live Supabase credentials are not embedded in the demo build.
 
 ## Deployment requirements
-1. Create a Supabase project.
-2. Apply every SQL file in `supabase/migrations/` in numeric order.
-3. Deploy `supabase/functions/admin-create-user` and configure the Supabase service-role secret in the function environment.
-4. Configure `.env.local`/hosting environment with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-5. Configure email confirmation/reset URLs in Supabase Auth.
-6. Configure a payment provider before enabling live CARD payments and connect its server-side webhook to the payment-state RPC.
+1. The project `gazak-go` is provisioned in Supabase and the repository migrations through `017` have been applied.
+2. The Edge Function `admin-create-user` is deployed with JWT verification enabled.
+3. Configure the hosting environment with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+4. Configure email confirmation/reset URLs in Supabase Auth.
+5. Configure a payment provider before enabling live CARD payments and connect its server-side webhook to the payment-state RPC.
 
 ## Important
 The repository contains the migrated application code and the Pages demo workflow. A live production deployment is not considered operational until the Supabase project, Auth settings, Edge Functions, payment provider and required environment variables are configured and a production build passes CI.
@@ -49,4 +48,4 @@ The repository contains the migrated application code and the Pages demo workflo
 The repository is configured to publish the demo through GitHub Actions at `/gazak-go/`.
 
 ## Stage 22 — Supabase production setup
-The repository now includes a production Supabase setup runbook at `docs/SUPABASE-PRODUCTION-SETUP.md`. The remaining environment-specific work is to connect the real Supabase project, apply the migrations, configure Auth/Edge Functions, and execute production E2E/RLS validation.
+The repository includes the production setup runbook at `docs/SUPABASE-PRODUCTION-SETUP.md`. The live Supabase project is provisioned and the database migrations through `017` plus `admin-create-user` Edge Function are deployed. Final closure still requires real Auth accounts and end-to-end production validation.
