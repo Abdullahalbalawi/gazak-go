@@ -15,17 +15,13 @@
 
 لا تضع Service Role Key داخل الواجهة أو في GitHub.
 
-## 2. تطبيق قاعدة البيانات
+## 2. المشروع وقاعدة البيانات
 
-طبّق ملفات:
+تم إنشاء مشروع Supabase فعلي باسم `gazak-go`، وحالته `ACTIVE_HEALTHY`.
 
-`supabase/migrations/001_initial_schema.sql`
-إلى
-`supabase/migrations/013_payment_billing_foundation.sql`
+Project URL: `https://uxpzhhyqdbucfnsdtygq.supabase.co`
 
-بالترتيب الرقمي.
-
-هذه المigrations تنشئ الجداول والسياسات ووظائف RPC الخاصة بالمستخدمين والطلبات والمخزون والإسناد الذكي والإشعارات والفواتير.
+تم تطبيق جميع ملفات الـmigrations الموجودة حالياً في المستودع من `001` إلى `017` بالترتيب الرقمي، وتشمل الجداول وRLS وRPCs والمخزون ودورة الطلب وSmart Dispatch والإشعارات والمرتجعات والاستبدال والفواتير والدفع وتقوية صلاحيات تنفيذ الدوال وتحسين RLS.
 
 ## 3. إعداد Authentication
 
@@ -50,11 +46,9 @@
 
 ## 5. Edge Function
 
-انشر:
+تم نشر `supabase/functions/admin-create-user` على المشروع الحقيقي بحالة `ACTIVE` و`verify_jwt=true`.
 
-`supabase/functions/admin-create-user`
-
-وظيفة إنشاء المستخدم الإداري تحتاج Service Role Key داخل بيئة Edge Function فقط.
+وظيفة إنشاء المستخدم الإداري تحتاج Service Role Key داخل بيئة Edge Function فقط، ولا يجب وضعه في المتصفح أو GitHub.
 
 ## 6. متغيرات الواجهة
 
