@@ -37,6 +37,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_DEMO_MODE: "false"
           VITE_CARD_PAYMENTS_ENABLED: "false"
         run: |
           test -n "$VITE_SUPABASE_URL"
