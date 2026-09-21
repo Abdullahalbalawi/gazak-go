@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import StaffHeader from "@/components/StaffHeader";
 import { Button } from "@/components/ui/button";
@@ -30,9 +30,9 @@ export default function DistributorCustody() {
   const fetchData = async () => {
     try {
       const [cust, txns, drvs] = await Promise.all([
-        base44.entities.Custody.list("-created_date", 100),
-        base44.entities.CylinderTransaction.list("-created_date", 100),
-        base44.entities.User.filter({ role: "driver" }, "-created_date", 100),
+        supabaseApi.entities.Custody.list("-created_date", 100),
+        supabaseApi.entities.CylinderTransaction.list("-created_date", 100),
+        supabaseApi.entities.User.filter({ role: "driver" }, "-created_date", 100),
       ]);
       setCustody(cust);
       setTransactions(txns);
@@ -64,7 +64,7 @@ export default function DistributorCustody() {
     }
     setSaving(true);
     try {
-      await base44.functions.invoke("manageInventory", {
+      await supabaseApi.functions.invoke("manageInventory", {
         action: "transferToDriver",
         product_id: dialog.product.product_id,
         quantity: Number(form.quantity),
