@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import CustomerHeader from "@/components/CustomerHeader";
 import BottomNav from "@/components/BottomNav";
@@ -17,7 +17,7 @@ export default function MyOrders() {
 
   const fetchOrders = async () => {
     try {
-      const list = await base44.entities.Order.filter(
+      const list = await supabaseApi.entities.Order.filter(
         { customer_id: user.id },
         "-created_date",
         50
@@ -37,7 +37,7 @@ export default function MyOrders() {
   const handleCancel = async (orderId) => {
     setCancelling(orderId);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
+      const res = await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: orderId,
         action: "cancel",
       });
