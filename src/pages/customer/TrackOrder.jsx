@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabaseApi } from "@/lib/supabaseApi";
+import { supabase } from "@/lib/supabaseClient";
 import CustomerHeader from "@/components/CustomerHeader";
 import BottomNav from "@/components/BottomNav";
 import StatusBadge from "@/components/StatusBadge";
@@ -21,7 +22,7 @@ export default function TrackOrder() {
       const o = await supabaseApi.entities.Order.get(id);
       setOrder(o);
       if (o.driver_id && ["ASSIGNED", "OUT_FOR_DELIVERY", "ARRIVED"].includes(o.status)) {
-        const { data: location } = await supabaseApi.raw
+        const { data: location } = await supabase
           .from("driver_locations")
           .select("latitude,longitude,accuracy_m,heading,speed_kmh,updated_at")
           .eq("driver_id", o.driver_id)
