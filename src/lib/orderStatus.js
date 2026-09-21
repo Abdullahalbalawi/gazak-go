@@ -10,6 +10,8 @@ export const ORDER_STATUSES = [
   "ARRIVED",
   "DELIVERED",
   "CANCELLED",
+  "OUT_OF_STOCK",
+  "WAITING_STOCK",
 ];
 
 export const STATUS_LABELS_AR = {
@@ -22,6 +24,8 @@ export const STATUS_LABELS_AR = {
   ARRIVED: "وصل السائق",
   DELIVERED: "تم التسليم",
   CANCELLED: "ملغي",
+  OUT_OF_STOCK: "غير متوفر",
+  WAITING_STOCK: "بانتظار المخزون",
 };
 
 export const CANCELLABLE_STATUSES = ["NEW", "ACCEPTED", "PREPARING"];
@@ -76,4 +80,6 @@ export const STATUS_BADGE_STYLES = {
   ARRIVED: "bg-teal-100 text-teal-700",
   DELIVERED: "bg-green-100 text-green-700",
   CANCELLED: "bg-red-100 text-red-700",
+  OUT_OF_STOCK: "bg-red-100 text-red-700",
+  WAITING_STOCK: "bg-yellow-100 text-yellow-700",
 };
