@@ -126,7 +126,7 @@ export default function AdminInventory() {
     }
   };
 
-  const filteredTx = txFilter ? transactions.filter((t) => t.type === txFilter) : transactions;
+  const filteredTx = txFilter ? transactions.filter((t) => t.transaction_type === txFilter) : transactions;
 
   const renderCustodyList = (userList) => {
     if (userList.length === 0) {
@@ -309,8 +309,8 @@ export default function AdminInventory() {
                           بواسطة: {tx.performed_by_name}
                         </p>
                       )}
-                      {tx.note && (
-                        <p className="text-xs text-muted-foreground mt-1 italic">"{tx.note}"</p>
+                      {tx.notes && (
+                        <p className="text-xs text-muted-foreground mt-1 italic">"{tx.notes}"</p>
                       )}
                     </div>
                   ))
