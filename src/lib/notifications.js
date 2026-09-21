@@ -1,11 +1,11 @@
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { CUSTOMER_NOTIFICATIONS } from "@/lib/orderStatus";
 
 // إنشاء إشعار داخلي لمستخدم معين
 export async function createNotification({ userId, title, body, orderId }) {
   if (!userId) return;
   try {
-    await base44.entities.Notification.create({
+    await supabaseApi.entities.Notification.create({
       user_id: userId,
       title,
       body: body || "",
