@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import StaffHeader from "@/components/StaffHeader";
 import AddUserDialog from "@/components/AddUserDialog";
 import UserDetailDialog from "@/components/UserDetailDialog";
@@ -30,7 +30,7 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const list = await base44.entities.User.list("-created_date", 200);
+      const list = await supabaseApi.entities.User.list("-created_date", 200);
       setUsers(list);
     } catch (e) {
       console.error(e);
