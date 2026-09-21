@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import { Bell, LogOut, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -37,7 +37,7 @@ export default function StaffHeader({ title }) {
 
   const fetchUnread = async () => {
     try {
-      const list = await base44.entities.Notification.filter({ user_id: user.id, read: false }, "-created_date", 50);
+      const list = await supabaseApi.entities.Notification.filter({ user_id: user.id, read: false }, "-created_date", 50);
       setUnread(list.length);
     } catch {
       // ignore
