@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import CustomerHeader from "@/components/CustomerHeader";
 import BottomNav from "@/components/BottomNav";
 import StatusBadge from "@/components/StatusBadge";
@@ -17,7 +17,7 @@ export default function TrackOrder() {
 
   const fetchOrder = async () => {
     try {
-      const o = await base44.entities.Order.get(id);
+      const o = await supabaseApi.entities.Order.get(id);
       setOrder(o);
     } catch (e) {
       console.error(e);
@@ -33,7 +33,7 @@ export default function TrackOrder() {
   const handleCancel = async () => {
     setCancelling(true);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
+      const res = await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: order.id,
         action: "cancel",
       });
