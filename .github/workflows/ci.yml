@@ -28,5 +28,5 @@ jobs:
       - name: Build
         env:
           VITE_SUPABASE_URL: https://qfbyncrmhijpypczdxld.supabase.co
-          VITE_SUPABASE_ANON_KEY: ci-placeholder
+          VITE_SUPABASE_ANON_KEY: sb_publishable_Zs_EEEfe0WDIA69GOLG-Xg_4dVRPL0a
         run: npm run build
