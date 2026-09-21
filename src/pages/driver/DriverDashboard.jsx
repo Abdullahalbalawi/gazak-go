@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import StaffHeader from "@/components/StaffHeader";
 import StatusBadge from "@/components/StatusBadge";
@@ -21,7 +21,7 @@ export default function DriverDashboard() {
   const fetchOrders = async () => {
     try {
       // RLS تعرض الطلبات المسندة للسائق فقط
-      const list = await base44.entities.Order.filter(
+      const list = await supabaseApi.entities.Order.filter(
         { driver_id: user.id },
         "-created_date",
         50
@@ -36,7 +36,7 @@ export default function DriverDashboard() {
 
   const fetchCustody = async () => {
     try {
-      const list = await base44.entities.Custody.list("-created_date", 50);
+      const list = await supabaseApi.entities.Custody.list("-created_date", 50);
       setCustody(list);
     } catch (e) {
       console.error(e);
@@ -55,7 +55,7 @@ export default function DriverDashboard() {
     if (!t) return;
     setActing(order.id + action);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
+      const res = await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: order.id,
         action,
       });
