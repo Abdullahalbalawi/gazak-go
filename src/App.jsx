@@ -70,7 +70,7 @@ const AuthenticatedApp = () => {
       <Route path="/cart" element={<RoleRoute allowedRoles={["customer"]} allowUnauthenticated><Cart /></RoleRoute>} />
 
       {/* Protected routes */}
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+      <Route element={<ProtectedRoute />}>
         {/* Customer routes */}
         <Route path="/checkout" element={<RoleRoute allowedRoles={["customer"]}><Checkout /></RoleRoute>} />
         <Route path="/order-success/:id" element={<RoleRoute allowedRoles={["customer"]}><OrderSuccess /></RoleRoute>} />
