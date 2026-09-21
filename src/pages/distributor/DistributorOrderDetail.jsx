@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import StaffHeader from "@/components/StaffHeader";
 import StatusBadge from "@/components/StatusBadge";
@@ -20,7 +20,7 @@ export default function DistributorOrderDetail() {
 
   const fetchOrder = async () => {
     try {
-      const o = await base44.entities.Order.get(id);
+      const o = await supabaseApi.entities.Order.get(id);
       setOrder(o);
     } catch (e) {
       console.error(e);
@@ -38,7 +38,7 @@ export default function DistributorOrderDetail() {
     if (!t) return;
     setActing(action);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
+      const res = await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: order.id,
         action,
         extra,
