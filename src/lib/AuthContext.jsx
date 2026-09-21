@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { appUrl } from '@/lib/authReturnTo';
 
 const AuthContext = createContext(null);
 
@@ -153,7 +154,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    window.location.assign(new URL('/login', new URL(import.meta.env.BASE_URL, window.location.origin)).href);
+    window.location.assign(appUrl('/login'));
   };
 
   const checkAppState = checkUserAuth;
