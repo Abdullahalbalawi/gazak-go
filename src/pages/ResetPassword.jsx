@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,13 +8,25 @@ import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 
 export default function ResetPassword() {
-  const [searchParams] = useSearchParams();
-  const resetToken = searchParams.get("token");
-
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const prepareRecovery = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        if (mounted) setError(error.message);
+        return;
+      }
+      if (mounted) setReady(Boolean(data.session?.user));
+    };
+    prepareRecovery();
+    if (!ready) {\n    return (\n      <AuthLayout icon={Lock} title="جاري التحقق" subtitle="نجهز رابط إعادة تعيين كلمة المرور...">\n        {error ? <p className="text-sm text-destructive text-center">{error}</p> : <div className="flex justify-center"><Loader2 className="w-6 h-6 animate-spin" /></div>}\n      </AuthLayout>\n    );\n  }\n\n  return () => { mounted = false; };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +37,9 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      await base44.auth.resetPassword({ resetToken, newPassword });
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) throw updateError;
+      await supabase.auth.signOut();
       window.location.href = "/login";
     } catch (err) {
       setError(err.message || "Failed to reset password");
@@ -34,7 +48,7 @@ export default function ResetPassword() {
     }
   };
 
-  if (!resetToken) {
+  if (!ready) {
     return (
       <AuthLayout
         icon={AlertTriangle}
