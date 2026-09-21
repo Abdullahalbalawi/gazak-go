@@ -302,22 +302,26 @@ const profileEntity = {
       return normalizeProfile(data);
     }
 
-    const row = {};
-    if (input.phone !== undefined) row.phone = input.phone;
-    if (input.full_name !== undefined) row.full_name = input.full_name;
-    if (input.role !== undefined) row.role = input.role;
-    if (input.active !== undefined) row.is_active = input.active;
-
-    const { data, error } = await supabase.from("profiles").update(row).eq("id", id).select("*").single();
+    const { data, error } = await supabase.functions.invoke("admin-user", {
+      body: {
+        action: "update",
+        user_id: id,
+        phone: input.phone,
+        full_name: input.full_name,
+        role: input.role,
+        is_active: input.active,
+      },
+    });
     if (error) throw error;
-    return normalizeProfile(data);
+    return normalizeProfile(data.data ?? data);
   },
 
   async delete(id) {
-    // Browser clients cannot safely delete auth.users. Deactivate the profile instead.
-    const { data, error } = await supabase.from("profiles").update({ is_active: false }).eq("id", id).select("*").single();
+    const { data, error } = await supabase.functions.invoke("admin-user", {
+      body: { action: "deactivate", user_id: id },
+    });
     if (error) throw error;
-    return normalizeProfile(data);
+    return normalizeProfile(data.data ?? data);
   },
 };
 
@@ -439,6 +443,8 @@ const invoke = async (name, payload = {}) => {
     updateOrderStatus: "update-order-status",
     manageInventory: "manage-inventory",
     markNotificationRead: "mark-notification-read",
+    adminUser: "admin-user",
+    updateDriverLocation: "update-driver-location",
   };
 
   if (functionMap[name]) {
@@ -446,6 +452,10 @@ const invoke = async (name, payload = {}) => {
       body: payload,
     });
     if (error) throw error;
+
+    if (name === "adminUser" || name === "updateDriverLocation") {
+      return { data: data.data ?? data };
+    }
 
     if (name === "createOrder") {
       const order = await orderEntity.get(data.data.order.id);
@@ -509,8 +519,23 @@ const auth = {
   },
 };
 
+const users = {
+  async inviteUser(email, platformRole, role) {
+    const { data, error } = await supabase.functions.invoke("admin-invite", {
+      body: {
+        email,
+        role: role || (platformRole === "admin" ? "admin" : "customer"),
+        redirectTo: window.location.origin + "/login",
+      },
+    });
+    if (error) throw error;
+    return data;
+  },
+};
+
 export const supabaseApi = {
   auth,
+  users,
   entities: entity,
   functions: {
     invoke,
