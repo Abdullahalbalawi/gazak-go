@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   // Post-login destination (e.g. the MCP OAuth consent page sends users here
   // with returnTo so the grant flow can resume). Same-origin paths only.
   const returnTo = safeReturnTo();
@@ -23,9 +24,29 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (signInError) throw signInError;
-      window.location.href = appUrl(returnTo);
+
+      // Direct login has no returnTo route, so resolve the user's role first.
+      let destination = returnTo;
+      if (destination === "/" && data?.user?.id) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        if (profileError) throw profileError;
+
+        const roleHomes = {
+          admin: "/admin",
+          distributor: "/distributor",
+          driver: "/driver",
+          customer: "/",
+        };
+        destination = roleHomes[profile?.role] || "/";
+      }
+
+      navigate(destination, { replace: true });
     } catch (err) {
       setError(err.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
     } finally {
