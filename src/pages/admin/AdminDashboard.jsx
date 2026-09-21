@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import StaffHeader from "@/components/StaffHeader";
 import { Loader2, Package, Truck, CheckCircle2, XCircle, Clock, Users, ClipboardList, Flame, Boxes } from "lucide-react";
 
@@ -10,7 +10,7 @@ export default function AdminDashboard() {
 
   const fetchOrders = async () => {
     try {
-      const list = await base44.entities.Order.list("-created_date", 200);
+      const list = await supabaseApi.entities.Order.list("-created_date", 200);
       setOrders(list);
     } catch (e) {
       console.error(e);
