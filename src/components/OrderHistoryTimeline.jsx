@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { STATUS_LABELS_AR } from "@/lib/orderStatus";
 import { History } from "lucide-react";
 
@@ -10,7 +10,7 @@ export default function OrderHistoryTimeline({ orderId }) {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const list = await base44.entities.OrderHistory.filter(
+        const list = await supabaseApi.entities.OrderHistory.filter(
           { order_id: orderId },
           "created_date",
           50
