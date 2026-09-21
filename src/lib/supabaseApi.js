@@ -168,16 +168,18 @@ const orderEntity = {
       );
     }
 
-    const { data, error } = await supabase.rpc("update_customer_order_details", {
-      p_order_id: id,
-      p_delivery_address: patch.address !== undefined ? { address: patch.address } : null,
-      p_latitude: patch.latitude ?? null,
-      p_longitude: patch.longitude ?? null,
-      p_requested_delivery_at: patch.requested_delivery_at ?? null,
-      p_notes: patch.notes ?? null,
+    const { data, error } = await supabase.functions.invoke("update-customer-order", {
+      body: {
+        order_id: id,
+        address: patch.address,
+        latitude: patch.latitude,
+        longitude: patch.longitude,
+        requested_delivery_at: patch.requested_delivery_at,
+        notes: patch.notes,
+      },
     });
     if (error) throw error;
-    return hydrateOrder(data);
+    return hydrateOrder(data.data ?? data);
   },
 
   async delete(id) {
@@ -294,12 +296,11 @@ const profileEntity = {
     const hasProtectedFields = protectedFields.some((field) => input[field] !== undefined);
 
     if (id === currentUserId && !hasProtectedFields) {
-      const { data, error } = await supabase.rpc("update_profile_self", {
-        p_full_name: input.full_name ?? null,
-        p_phone: input.phone ?? null,
+      const { data, error } = await supabase.functions.invoke("update-profile", {
+        body: { full_name: input.full_name, phone: input.phone },
       });
       if (error) throw error;
-      return normalizeProfile(data);
+      return normalizeProfile(data.data ?? data);
     }
 
     const { data, error } = await supabase.functions.invoke("admin-user", {
@@ -354,9 +355,8 @@ const notificationEntity = {
     if (shouldRead !== true) {
       throw new Error("Notification updates are limited to marking notifications as read.");
     }
-    const { data, error } = await supabase.rpc("mark_notification_read", {
-      p_notification_id: id,
-      p_all: false,
+    const { data, error } = await supabase.functions.invoke("mark-notification-read", {
+      body: { notification_id: id, all: false },
     });
     if (error) throw error;
     const notification = await supabase.from("notifications").select("*").eq("id", id).single();
@@ -445,6 +445,8 @@ const invoke = async (name, payload = {}) => {
     markNotificationRead: "mark-notification-read",
     adminUser: "admin-user",
     updateDriverLocation: "update-driver-location",
+    updateProfile: "update-profile",
+    updateCustomerOrder: "update-customer-order",
   };
 
   if (functionMap[name]) {
@@ -453,7 +455,7 @@ const invoke = async (name, payload = {}) => {
     });
     if (error) throw error;
 
-    if (name === "adminUser" || name === "updateDriverLocation") {
+    if (name === "adminUser" || name === "updateDriverLocation" || name === "updateProfile" || name === "updateCustomerOrder") {
       return { data: data.data ?? data };
     }
 
@@ -505,12 +507,11 @@ const auth = {
   },
 
   async updateMe(input = {}) {
-    const { data, error } = await supabase.rpc("update_profile_self", {
-      p_full_name: input.full_name ?? null,
-      p_phone: input.phone ?? null,
+    const { data, error } = await supabase.functions.invoke("update-profile", {
+      body: { full_name: input.full_name, phone: input.phone },
     });
     if (error) throw error;
-    return normalizeProfile(data);
+    return normalizeProfile(data.data ?? data);
   },
 
   async logout() {
