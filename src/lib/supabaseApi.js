@@ -1,11 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
 
-/**
- * Temporary compatibility facade while the UI is being migrated from Base44.
- * The application keeps the old "base44.entities.*" call sites for now, but all
- * reads/writes below are executed against Supabase.
- */
-
 const sortSpec = (sort) => {
   const value = sort || "-created_date";
   return {
