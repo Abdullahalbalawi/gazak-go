@@ -27,10 +27,10 @@ export default {
       const { data, error } = await ctx.supabaseAdmin.rpc('manage_inventory', {
         p_action: action,
         p_product_id: body.product_id,
-        p_quantity: Number(body.quantity),
-        p_notes: body.notes || null,
-        p_target_party_id: body.target_party_id || body.user_id || null,
-        p_target_party_type: body.target_party_type || null,
+        p_quantity: quantity,
+        p_notes: body.notes || body.note || null,
+        p_target_party_id: targetPartyId,
+        p_target_party_type: targetPartyType,
         p_actor_id: actorId,
       });
       if (error) throw error;
