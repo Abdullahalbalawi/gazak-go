@@ -50,6 +50,37 @@ export default function DriverDashboard() {
     return () => clearInterval(interval);
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!user?.id || !navigator.geolocation) return undefined;
+    let mounted = true;
+    const sendLocation = () => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          if (!mounted) return;
+          try {
+            await supabaseApi.functions.invoke("updateDriverLocation", {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy_m: position.coords.accuracy,
+              heading: position.coords.heading,
+              speed_kmh: position.coords.speed == null ? null : position.coords.speed * 3.6,
+            });
+          } catch (e) {
+            console.debug("Driver location update failed:", e);
+          }
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
+      );
+    };
+    sendLocation();
+    const interval = setInterval(sendLocation, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [user?.id]);
+
   const doTransition = async (order, action) => {
     const t = canTransition(action, order.status, user.role);
     if (!t) return;
