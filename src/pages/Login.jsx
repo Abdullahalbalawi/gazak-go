@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
-import { safeReturnTo } from "@/lib/authReturnTo";
+import { safeReturnTo, appUrl } from "@/lib/authReturnTo";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -25,7 +25,7 @@ export default function Login() {
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (signInError) throw signInError;
-      window.location.href = new URL(returnTo, new URL(import.meta.env.BASE_URL, window.location.origin)).href;
+      window.location.href = appUrl(returnTo);
     } catch (err) {
       setError(err.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
     } finally {
@@ -37,7 +37,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const redirectTo = new URL(returnTo, new URL(import.meta.env.BASE_URL, window.location.origin)).href;
+      const redirectTo = appUrl(returnTo);
       const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
       if (oauthError) throw oauthError;
     } catch (err) {
