@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import StaffHeader from "@/components/StaffHeader";
 import StatusBadge from "@/components/StatusBadge";
@@ -23,7 +23,7 @@ export default function DistributorDashboard() {
   const fetchOrders = async () => {
     try {
       // RLS تعرض طلبات الموزع + الطلبات الجديدة
-      const list = await base44.entities.Order.list("-created_date", 100);
+      const list = await supabaseApi.entities.Order.list("-created_date", 100);
       setOrders(list);
     } catch (e) {
       console.error(e);
