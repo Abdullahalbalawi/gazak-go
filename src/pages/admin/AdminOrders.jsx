@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import StaffHeader from "@/components/StaffHeader";
 import StatusBadge from "@/components/StatusBadge";
 import OrderHistoryTimeline from "@/components/OrderHistoryTimeline";
@@ -28,7 +28,7 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const list = await base44.entities.Order.list("-created_date", 200);
+      const list = await supabaseApi.entities.Order.list("-created_date", 200);
       setOrders(list);
     } catch (e) {
       console.error(e);
@@ -39,7 +39,7 @@ export default function AdminOrders() {
 
   const fetchDrivers = async () => {
     try {
-      const list = await base44.entities.User.filter({ role: "driver" }, "-created_date", 100);
+      const list = await supabaseApi.entities.User.filter({ role: "driver" }, "-created_date", 100);
       setDrivers(list);
     } catch (e) {
       console.error(e);
@@ -61,7 +61,7 @@ export default function AdminOrders() {
     }
     setAssigning(orderId);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
+      const res = await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: orderId,
         action: "assign",
         extra: { driver_id: driverId },
@@ -83,7 +83,7 @@ export default function AdminOrders() {
     }
     setAssigning(orderId);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
+      const res = await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: orderId,
         action: "reassign",
         extra: { driver_id: driverId },
@@ -100,7 +100,7 @@ export default function AdminOrders() {
   const handleStatusChange = async (orderId, newStatus, reason) => {
     setChangingStatus(orderId);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
+      const res = await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: orderId,
         action: "manualStatus",
         extra: { status: newStatus, reason },
@@ -119,7 +119,7 @@ export default function AdminOrders() {
     if (!order) return;
     setDeleting(true);
     try {
-      await base44.functions.invoke("updateOrderStatus", {
+      await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: order.id,
         action: "delete",
       });
