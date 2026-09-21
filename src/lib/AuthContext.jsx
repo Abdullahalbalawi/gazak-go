@@ -153,7 +153,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    window.location.assign('/login');
+    window.location.assign(new URL('/login', new URL(import.meta.env.BASE_URL, window.location.origin)).href);
   };
 
   const checkAppState = checkUserAuth;
