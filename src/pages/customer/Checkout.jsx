@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import { useCart } from "@/lib/CartContext";
 import CustomerHeader from "@/components/CustomerHeader";
@@ -45,13 +45,13 @@ export default function Checkout() {
       // تحديث ملف المستخدم بالاسم والجوال إن لزم
       if (user && (!user.phone || !user.full_name)) {
         try {
-          await base44.auth.updateMe({ phone: phone.trim(), full_name: name.trim() });
+          await supabaseApi.auth.updateMe({ phone: phone.trim(), full_name: name.trim() });
         } catch {
           // غير حرج
         }
       }
 
-      const res = await base44.functions.invoke("createOrder", {
+      const res = await supabaseApi.functions.invoke("createOrder", {
         items: items.map((i) => ({
           product_id: i.product_id,
           quantity: i.quantity,
