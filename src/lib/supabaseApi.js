@@ -154,33 +154,28 @@ const orderEntity = {
   },
 
   async update(id, patch) {
-    const dbPatch = {};
-    if (patch.status) dbPatch.status = patch.status;
-    if (patch.customer_id) dbPatch.customer_id = patch.customer_id;
-    if (patch.distributor_id !== undefined) dbPatch.distributor_id = patch.distributor_id;
-    if (patch.driver_id !== undefined) dbPatch.driver_id = patch.driver_id;
-    if (patch.subtotal !== undefined) dbPatch.subtotal = patch.subtotal;
-    if (patch.delivery_fee !== undefined) dbPatch.delivery_fee = patch.delivery_fee;
-    if (patch.discount !== undefined) dbPatch.discount = patch.discount;
-    if (patch.total !== undefined) dbPatch.total = patch.total;
-    if (patch.latitude !== undefined) dbPatch.latitude = patch.latitude;
-    if (patch.longitude !== undefined) dbPatch.longitude = patch.longitude;
-    if (patch.notes !== undefined) dbPatch.notes = patch.notes;
-    if (patch.metadata !== undefined) dbPatch.metadata = patch.metadata;
-    if (patch.address !== undefined) dbPatch.delivery_address = { address: patch.address };
-    if (patch.payment_status !== undefined) dbPatch.payment_status = patch.payment_status;
-
-    if (patch.customer_name || patch.customer_phone || patch.payment_method) {
-      const current = await this.get(id);
-      dbPatch.metadata = {
-        ...(current.metadata || {}),
-        ...(patch.customer_name ? { customer_name: patch.customer_name } : {}),
-        ...(patch.customer_phone ? { customer_phone: patch.customer_phone } : {}),
-        ...(patch.payment_method ? { payment_method: patch.payment_method } : {}),
-      };
+    const allowed = [
+      "address",
+      "latitude",
+      "longitude",
+      "requested_delivery_at",
+      "notes",
+    ];
+    const unsupported = Object.keys(patch || {}).filter((key) => !allowed.includes(key));
+    if (unsupported.length) {
+      throw new Error(
+        `Direct order mutation is disabled for protected fields: ${unsupported.join(", ")}. Use the application function API.`
+      );
     }
 
-    const { data, error } = await supabase.from("orders").update(dbPatch).eq("id", id).select("*").single();
+    const { data, error } = await supabase.rpc("update_customer_order_details", {
+      p_order_id: id,
+      p_delivery_address: patch.address !== undefined ? { address: patch.address } : null,
+      p_latitude: patch.latitude ?? null,
+      p_longitude: patch.longitude ?? null,
+      p_requested_delivery_at: patch.requested_delivery_at ?? null,
+      p_notes: patch.notes ?? null,
+    });
     if (error) throw error;
     return hydrateOrder(data);
   },
@@ -291,11 +286,28 @@ const profileEntity = {
   },
 
   async update(id, input) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentUserId = sessionData.session?.user?.id;
+    if (!currentUserId) throw new Error("AUTH_REQUIRED");
+
+    const protectedFields = ["role", "active"];
+    const hasProtectedFields = protectedFields.some((field) => input[field] !== undefined);
+
+    if (id === currentUserId && !hasProtectedFields) {
+      const { data, error } = await supabase.rpc("update_profile_self", {
+        p_full_name: input.full_name ?? null,
+        p_phone: input.phone ?? null,
+      });
+      if (error) throw error;
+      return normalizeProfile(data);
+    }
+
     const row = {};
     if (input.phone !== undefined) row.phone = input.phone;
     if (input.full_name !== undefined) row.full_name = input.full_name;
     if (input.role !== undefined) row.role = input.role;
     if (input.active !== undefined) row.is_active = input.active;
+
     const { data, error } = await supabase.from("profiles").update(row).eq("id", id).select("*").single();
     if (error) throw error;
     return normalizeProfile(data);
@@ -334,13 +346,18 @@ const notificationEntity = {
     return normalizeNotification(data);
   },
   async update(id, input) {
-    const row = {};
-    if (input.read !== undefined) row.is_read = input.read;
-    if (input.is_read !== undefined) row.is_read = input.is_read;
-    if (input.read_at !== undefined) row.read_at = input.read_at;
-    const { data, error } = await supabase.from("notifications").update(row).eq("id", id).select("*").single();
+    const shouldRead = input.read ?? input.is_read;
+    if (shouldRead !== true) {
+      throw new Error("Notification updates are limited to marking notifications as read.");
+    }
+    const { data, error } = await supabase.rpc("mark_notification_read", {
+      p_notification_id: id,
+      p_all: false,
+    });
     if (error) throw error;
-    return normalizeNotification(data);
+    const notification = await supabase.from("notifications").select("*").eq("id", id).single();
+    if (notification.error) throw notification.error;
+    return normalizeNotification(notification.data);
   },
 };
 
@@ -494,12 +511,10 @@ export const supabaseApi = {
       if (!sessionData.session?.user) throw new Error("AUTH_REQUIRED");
 
       const userId = sessionData.session.user.id;
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ full_name: input.full_name, phone: input.phone })
-        .eq("id", userId)
-        .select("*")
-        .single();
+      const { data, error } = await supabase.rpc("update_profile_self", {
+        p_full_name: input.full_name ?? null,
+        p_phone: input.phone ?? null,
+      });
 
       if (error) throw error;
       return normalizeProfile(data);
