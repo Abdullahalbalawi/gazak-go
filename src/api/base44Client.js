@@ -483,7 +483,11 @@ const invoke = async (name, payload = {}) => {
   }
 
   if (name === "processReturnExchange") {
-    throw new Error("مرتجع واستبدال الطلبات سيتم نقلهما إلى Supabase في المرحلة التالية.");
+    const { data, error } = await supabase.functions.invoke("process-return-exchange", {
+      body: payload,
+    });
+    if (error) throw error;
+    return { data };
   }
 
   throw new Error(`Unsupported application function: ${name}`);
@@ -510,8 +514,16 @@ export const base44 = {
   entities: entity,
   functions: { invoke },
   users: {
-    async inviteUser() {
-      throw new Error("دعوة مستخدم جديدة تحتاج Edge Function بصلاحية خادم، وسيتم نقلها في المرحلة التالية.");
+    async inviteUser(email, _platformRole = "user", appRole = "customer") {
+      const { data, error } = await supabase.functions.invoke("admin-invite", {
+        body: {
+          email,
+          role: appRole,
+          redirectTo: window.location.origin + "/login",
+        },
+      });
+      if (error) throw error;
+      return data;
     },
   },
 };
