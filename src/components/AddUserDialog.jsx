@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +34,7 @@ export default function AddUserDialog({ open, onOpenChange, onDone }) {
     try {
       // inviteUser only accepts platform roles "user" or "admin"
       const platformRole = role === "admin" ? "admin" : "user";
-      await base44.users.inviteUser(email.trim(), platformRole, role);
+      await supabaseApi.users.inviteUser(email.trim(), platformRole, role);
       toast({
         title: "تم إرسال الدعوة بنجاح",
         description:
