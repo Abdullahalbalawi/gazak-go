@@ -434,59 +434,30 @@ const entity = {
 };
 
 const invoke = async (name, payload = {}) => {
-  if (name === "createOrder") {
-    const { data, error } = await supabase.rpc("create_order", {
-      p_items: payload.items || [],
-      p_customer_name: payload.customer_name || "",
-      p_customer_phone: payload.customer_phone || "",
-      p_address: payload.address || "",
-      p_latitude: payload.latitude ?? null,
-      p_longitude: payload.longitude ?? null,
-      p_payment_method: payload.payment_method || "CASH",
-    });
-    if (error) throw error;
-    const order = await orderEntity.get(data.order.id);
-    return { data: { order } };
-  }
+  const functionMap = {
+    createOrder: "create-order",
+    updateOrderStatus: "update-order-status",
+    manageInventory: "manage-inventory",
+    markNotificationRead: "mark-notification-read",
+  };
 
-  if (name === "updateOrderStatus") {
-    const { data, error } = await supabase.rpc("update_order_status", {
-      p_order_id: payload.order_id,
-      p_action: payload.action,
-      p_extra: payload.extra || {},
+  if (functionMap[name]) {
+    const { data, error } = await supabase.functions.invoke(functionMap[name], {
+      body: payload,
     });
     if (error) throw error;
-    const order = await orderEntity.get(payload.order_id);
-    return { data: { ...data, order } };
-  }
 
-  if (name === "manageInventory") {
-    const actionMap = {
-      restock: "restock",
-      adjust: "adjust",
-      transfer_driver: "transfer_driver",
-      transfer_distributor: "transfer_distributor",
-    };
-    const action = actionMap[payload.action] || payload.action;
-    const { data, error } = await supabase.rpc("manage_inventory", {
-      p_action: action,
-      p_product_id: payload.product_id,
-      p_quantity: Number(payload.quantity),
-      p_notes: payload.notes || null,
-      p_target_party_id: payload.target_party_id || payload.user_id || null,
-      p_target_party_type: payload.target_party_type || null,
-    });
-    if (error) throw error;
-    return { data };
-  }
+    if (name === "createOrder") {
+      const order = await orderEntity.get(data.data.order.id);
+      return { data: { order } };
+    }
 
-  if (name === "markNotificationRead") {
-    const { data, error } = await supabase.rpc("mark_notification_read", {
-      p_notification_id: payload.notification_id || null,
-      p_all: Boolean(payload.all),
-    });
-    if (error) throw error;
-    return { data };
+    if (name === "updateOrderStatus") {
+      const order = await orderEntity.get(payload.order_id);
+      return { data: { ...(data.data || {}), order } };
+    }
+
+    return { data: data.data ?? data };
   }
 
   if (name === "notifyOrderCreated") {
@@ -502,37 +473,4 @@ const invoke = async (name, payload = {}) => {
   }
 
   throw new Error(`Unsupported application function: ${name}`);
-};
-
-export const supabaseApi = {
-  auth: {
-    async updateMe(input) {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session?.user) throw new Error("AUTH_REQUIRED");
-
-      const userId = sessionData.session.user.id;
-      const { data, error } = await supabase.rpc("update_profile_self", {
-        p_full_name: input.full_name ?? null,
-        p_phone: input.phone ?? null,
-      });
-
-      if (error) throw error;
-      return normalizeProfile(data);
-    },
-  },
-  entities: entity,
-  functions: { invoke },
-  users: {
-    async inviteUser(email, _platformRole = "user", appRole = "customer") {
-      const { data, error } = await supabase.functions.invoke("admin-invite", {
-        body: {
-          email,
-          role: appRole,
-          redirectTo: window.location.origin + "/login",
-        },
-      });
-      if (error) throw error;
-      return data;
-    },
-  },
 };
