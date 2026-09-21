@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 
 const ROLE_HOMES = {
@@ -11,6 +11,7 @@ const ROLE_HOMES = {
 
 export default function RoleRoute({ allowedRoles, allowUnauthenticated = false, children }) {
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
+  const location = useLocation();
 
   if (isLoadingAuth) {
     return (
@@ -21,7 +22,11 @@ export default function RoleRoute({ allowedRoles, allowUnauthenticated = false, 
   }
 
   if (!isAuthenticated) {
-    return allowUnauthenticated ? children : <Navigate to="/login" replace />;
+    if (allowUnauthenticated) return children;
+
+    const returnTo = location.pathname + location.search + location.hash;
+    const loginPath = "/login?returnTo=" + encodeURIComponent(returnTo || "/");
+    return <Navigate to={loginPath} replace />;
   }
 
   const role = user?.role || "customer";
