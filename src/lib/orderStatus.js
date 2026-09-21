@@ -28,7 +28,7 @@ export const STATUS_LABELS_AR = {
   WAITING_STOCK: "بانتظار المخزون",
 };
 
-export const CANCELLABLE_STATUSES = ["NEW", "ACCEPTED", "PREPARING"];
+export const CANCELLABLE_STATUSES = ["NEW", "ACCEPTED", "PREPARING", "WAITING_STOCK", "OUT_OF_STOCK"];
 
 // انتقالات الحالة: من ← إلى، والأدوار المسموح لها
 export const TRANSITIONS = {
