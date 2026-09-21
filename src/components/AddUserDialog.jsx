@@ -32,15 +32,10 @@ export default function AddUserDialog({ open, onOpenChange, onDone }) {
     }
     setSaving(true);
     try {
-      // inviteUser only accepts platform roles "user" or "admin"
-      const platformRole = role === "admin" ? "admin" : "user";
-      await supabaseApi.users.inviteUser(email.trim(), platformRole, role);
+      await supabaseApi.users.inviteUser(email.trim(), "user", role);
       toast({
         title: "تم إرسال الدعوة بنجاح",
-        description:
-          role === "admin"
-            ? "تمت دعوة المستخدم كمسؤول."
-            : "سيظهر المستخدم بقاعدة (عميل) بعد تسجيله — غيّر دوره بعدها من قائمة المستخدمين.",
+        description: "تمت دعوة المستخدم بالدور المحدد.",
       });
       setEmail("");
       setRole("customer");
@@ -89,7 +84,7 @@ export default function AddUserDialog({ open, onOpenChange, onDone }) {
             </select>
           </div>
           <p className="text-xs text-muted-foreground">
-            سيتم إرسال دعوة بالبريد الإلكتروني للمستخدم لإكمال التسجيل. للأدوار غير الإدارية، يبدأ المستخدم كعميل بعد تسجيله ويمكن تغيير دوره لاحقًا.
+            سيتم إرسال دعوة بالبريد الإلكتروني للمستخدم لإكمال التسجيل، وسيُطبّق الدور المحدد مباشرة بعد إنشاء الحساب.
           </p>
         </div>
         <DialogFooter>
