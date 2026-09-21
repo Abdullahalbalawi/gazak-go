@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,8 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email, password);
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (signInError) throw signInError;
       window.location.href = returnTo;
     } catch (err) {
       setError(err.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
@@ -32,8 +33,17 @@ export default function Login() {
     }
   };
 
-  const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", returnTo);
+  const handleGoogle = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const redirectTo = `${window.location.origin}${returnTo}`;
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+      if (oauthError) throw oauthError;
+    } catch (err) {
+      setError(err.message || "تعذر تسجيل الدخول عبر Google");
+      setLoading(false);
+    }
   };
 
   return (

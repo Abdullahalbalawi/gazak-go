@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import StaffHeader from "@/components/StaffHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,10 +45,10 @@ export default function AdminInventory() {
   const fetchData = async () => {
     try {
       const [prods, cust, txns, usrs] = await Promise.all([
-        base44.entities.Product.list("-created_date", 100),
-        base44.entities.Custody.list("-created_date", 200),
-        base44.entities.CylinderTransaction.list("-created_date", 200),
-        base44.entities.User.list("-created_date", 200),
+        supabaseApi.entities.Product.list("-created_date", 100),
+        supabaseApi.entities.Custody.list("-created_date", 200),
+        supabaseApi.entities.CylinderTransaction.list("-created_date", 200),
+        supabaseApi.entities.User.list("-created_date", 200),
       ]);
       setProducts(prods);
       setCustody(cust);
@@ -111,7 +111,7 @@ export default function AdminInventory() {
         payload.counterparty_id = form.counterparty_id;
       }
 
-      await base44.functions.invoke("manageInventory", payload);
+      await supabaseApi.functions.invoke("manageInventory", payload);
       toast({ title: "تمت العملية بنجاح" });
       setDialog({ open: false, action: null, product: null });
       fetchData();
@@ -126,7 +126,7 @@ export default function AdminInventory() {
     }
   };
 
-  const filteredTx = txFilter ? transactions.filter((t) => t.type === txFilter) : transactions;
+  const filteredTx = txFilter ? transactions.filter((t) => t.transaction_type === txFilter) : transactions;
 
   const renderCustodyList = (userList) => {
     if (userList.length === 0) {
@@ -309,8 +309,8 @@ export default function AdminInventory() {
                           بواسطة: {tx.performed_by_name}
                         </p>
                       )}
-                      {tx.note && (
-                        <p className="text-xs text-muted-foreground mt-1 italic">"{tx.note}"</p>
+                      {tx.notes && (
+                        <p className="text-xs text-muted-foreground mt-1 italic">"{tx.notes}"</p>
                       )}
                     </div>
                   ))

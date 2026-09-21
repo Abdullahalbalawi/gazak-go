@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +29,12 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      await base44.auth.register({ email, password });
+      const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password });
+      if (signUpError) throw signUpError;
+      if (data.session) {
+        window.location.href = safeReturnTo();
+        return;
+      }
       setShowOtp(true);
     } catch (err) {
       setError(err.message || "فشل إنشاء الحساب");
@@ -42,10 +47,8 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      const result = await base44.auth.verifyOtp({ email, otpCode });
-      if (result?.access_token) {
-        base44.auth.setToken(result.access_token);
-      }
+      const { error: verifyError } = await supabase.auth.verifyOtp({ email: email.trim(), token: otpCode, type: "signup" });
+      if (verifyError) throw verifyError;
       window.location.href = safeReturnTo();
     } catch (err) {
       setError(err.message || "رمز التحقق غير صحيح");
@@ -57,7 +60,8 @@ export default function Register() {
   const handleResend = async () => {
     setError("");
     try {
-      await base44.auth.resendOtp(email);
+      const { error: resendError } = await supabase.auth.resend({ type: "signup", email: email.trim() });
+      if (resendError) throw resendError;
       toast({
         title: "تم إرسال الرمز",
         description: "تحقق من بريدك الإلكتروني للحصول على الرمز الجديد.",
@@ -67,8 +71,17 @@ export default function Register() {
     }
   };
 
-  const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", safeReturnTo());
+  const handleGoogle = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const redirectTo = `${window.location.origin}${safeReturnTo()}`;
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+      if (oauthError) throw oauthError;
+    } catch (err) {
+      setError(err.message || "تعذر التسجيل عبر Google");
+      setLoading(false);
+    }
   };
 
   if (showOtp) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import CustomerHeader from "@/components/CustomerHeader";
 import BottomNav from "@/components/BottomNav";
 import { useCart } from "@/lib/CartContext";
@@ -15,7 +15,7 @@ export default function CustomerHome() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const list = await base44.entities.Product.filter({ status: "ACTIVE" }, "-created_date", 50);
+        const list = await supabaseApi.entities.Product.filter({ status: "ACTIVE" }, "-created_date", 50);
         setProducts(list);
       } catch (e) {
         console.error(e);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +33,7 @@ export default function ReturnExchangeDialog({ order, open, onOpenChange, onDone
 
   useEffect(() => {
     if (open && mode === "exchange") {
-      base44.entities.Product.list().then(setProducts).catch(() => {});
+      supabaseApi.entities.Product.list().then(setProducts).catch(() => {});
     }
   }, [open, mode]);
 
@@ -83,7 +83,7 @@ export default function ReturnExchangeDialog({ order, open, onOpenChange, onDone
         }
       }
 
-      await base44.functions.invoke("processReturnExchange", payload);
+      await supabaseApi.functions.invoke("processReturnExchange", payload);
       toast({ title: mode === "return" ? "تم تسجيل المرتجع" : "تم تسجيل الاستبدال" });
       onOpenChange(false);
       onDone?.();

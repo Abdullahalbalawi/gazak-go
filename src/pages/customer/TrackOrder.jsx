@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
+import { supabase } from "@/lib/supabaseClient";
 import CustomerHeader from "@/components/CustomerHeader";
 import BottomNav from "@/components/BottomNav";
 import StatusBadge from "@/components/StatusBadge";
@@ -14,11 +15,22 @@ export default function TrackOrder() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [driverLocation, setDriverLocation] = useState(null);
 
   const fetchOrder = async () => {
     try {
-      const o = await base44.entities.Order.get(id);
+      const o = await supabaseApi.entities.Order.get(id);
       setOrder(o);
+      if (o.driver_id && ["ASSIGNED", "OUT_FOR_DELIVERY", "ARRIVED"].includes(o.status)) {
+        const { data: location } = await supabase
+          .from("driver_locations")
+          .select("latitude,longitude,accuracy_m,heading,speed_kmh,updated_at")
+          .eq("driver_id", o.driver_id)
+          .maybeSingle();
+        setDriverLocation(location || null);
+      } else {
+        setDriverLocation(null);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -28,12 +40,14 @@ export default function TrackOrder() {
 
   useEffect(() => {
     fetchOrder();
+    const interval = setInterval(fetchOrder, 15000);
+    return () => clearInterval(interval);
   }, [id]);
 
   const handleCancel = async () => {
     setCancelling(true);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
+      const res = await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: order.id,
         action: "cancel",
       });
@@ -70,6 +84,9 @@ export default function TrackOrder() {
   }
 
   const currentIdx = ORDER_STATUSES.indexOf(order.status);
+  const driverMapsLink = driverLocation
+    ? `https://www.google.com/maps?q=${driverLocation.latitude},${driverLocation.longitude}`
+    : null;
   const mapsLink = order.latitude && order.longitude
     ? `https://www.google.com/maps?q=${order.latitude},${order.longitude}`
     : null;
@@ -141,6 +158,24 @@ export default function TrackOrder() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {driverLocation && driverMapsLink && (
+          <div className="bg-white rounded-2xl border border-border p-4 mb-4">
+            <h3 className="font-semibold text-sm text-foreground mb-2">موقع السائق المباشر</h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              آخر تحديث: {new Date(driverLocation.updated_at).toLocaleTimeString("ar-SA")}
+            </p>
+            <a
+              href={driverMapsLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
+            >
+              <MapPin className="w-4 h-4" />
+              فتح موقع السائق في الخرائط
+            </a>
           </div>
         )}
 

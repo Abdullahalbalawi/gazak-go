@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import StaffHeader from "@/components/StaffHeader";
 import { Image } from "@/components/ui/image";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
-      const list = await base44.entities.Product.list("-created_date", 100);
+      const list = await supabaseApi.entities.Product.list("-created_date", 100);
       setProducts(list);
     } catch (e) {
       console.error(e);
@@ -81,10 +81,10 @@ export default function AdminProducts() {
         status: form.status,
       };
       if (editing) {
-        await base44.entities.Product.update(editing.id, data);
+        await supabaseApi.entities.Product.update(editing.id, data);
         toast({ title: "تم تحديث المنتج" });
       } else {
-        await base44.entities.Product.create(data);
+        await supabaseApi.entities.Product.create(data);
         toast({ title: "تمت إضافة المنتج" });
       }
       setDialogOpen(false);
@@ -104,20 +104,20 @@ export default function AdminProducts() {
     setDeleting(product.id);
     try {
       // Check if any order references this product
-      const orders = await base44.entities.Order.list("-created_date", 200);
+      const orders = await supabaseApi.entities.Order.list("-created_date", 200);
       const linked = orders.some((o) =>
         o.items?.some((i) => i.product_id === product.id)
       );
 
       if (linked) {
         // Deactivate instead of delete
-        await base44.entities.Product.update(product.id, { status: "INACTIVE" });
+        await supabaseApi.entities.Product.update(product.id, { status: "INACTIVE" });
         toast({
           title: "تم إيقاف المنتج بدلاً من حذفه",
           description: "المنتج مرتبط بطلبات سابقة، لذا تم إيقافه بدلاً من حذفه.",
         });
       } else {
-        await base44.entities.Product.delete(product.id);
+        await supabaseApi.entities.Product.delete(product.id);
         toast({ title: "تم حذف المنتج" });
       }
       fetchProducts();
@@ -135,7 +135,7 @@ export default function AdminProducts() {
   const toggleStatus = async (product) => {
     const newStatus = product.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     try {
-      await base44.entities.Product.update(product.id, { status: newStatus });
+      await supabaseApi.entities.Product.update(product.id, { status: newStatus });
       toast({
         title: newStatus === "ACTIVE" ? "تم تفعيل المنتج" : "تم إيقاف المنتج",
       });

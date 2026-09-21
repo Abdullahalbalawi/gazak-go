@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import { Bell, Check } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -12,7 +12,7 @@ export default function Notifications() {
 
   const fetchNotifications = async () => {
     try {
-      const list = await base44.entities.Notification.filter(
+      const list = await supabaseApi.entities.Notification.filter(
         { user_id: user.id },
         "-created_date",
         50
@@ -33,7 +33,7 @@ export default function Notifications() {
     const unread = notifications.filter((n) => !n.read);
     if (unread.length === 0) return;
     try {
-      await base44.functions.invoke("markNotificationRead", { all: true });
+      await supabaseApi.functions.invoke("markNotificationRead", { all: true });
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       toast({ title: "تم تحديد الكل كمقروء" });
     } catch (e) {

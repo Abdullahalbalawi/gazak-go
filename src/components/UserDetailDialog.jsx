@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,7 +50,7 @@ export default function UserDetailDialog({ user, open, onOpenChange, onDone }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = await base44.entities.User.update(user.id, {
+      const updated = await supabaseApi.entities.User.update(user.id, {
         phone: phone.trim(),
         role,
       });
@@ -72,7 +72,7 @@ export default function UserDetailDialog({ user, open, onOpenChange, onDone }) {
     if (!confirm(`هل أنت متأكد من حذف المستخدم "${user.full_name || user.email}"؟`)) return;
     setDeleting(true);
     try {
-      await base44.entities.User.delete(user.id);
+      await supabaseApi.entities.User.delete(user.id);
       toast({ title: "تم حذف المستخدم" });
       onOpenChange(false);
       onDone?.(null, user.id);
@@ -90,7 +90,7 @@ export default function UserDetailDialog({ user, open, onOpenChange, onDone }) {
   const handleToggleActive = async () => {
     setToggling(true);
     try {
-      const updated = await base44.entities.User.update(user.id, { active: !active });
+      const updated = await supabaseApi.entities.User.update(user.id, { active: !active });
       toast({ title: active ? "تم إلغاء التنشيط" : "تم التنشيط" });
       onDone?.(updated);
     } catch (e) {

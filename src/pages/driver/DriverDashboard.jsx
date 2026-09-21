@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import StaffHeader from "@/components/StaffHeader";
 import StatusBadge from "@/components/StatusBadge";
@@ -21,7 +21,7 @@ export default function DriverDashboard() {
   const fetchOrders = async () => {
     try {
       // RLS تعرض الطلبات المسندة للسائق فقط
-      const list = await base44.entities.Order.filter(
+      const list = await supabaseApi.entities.Order.filter(
         { driver_id: user.id },
         "-created_date",
         50
@@ -36,7 +36,7 @@ export default function DriverDashboard() {
 
   const fetchCustody = async () => {
     try {
-      const list = await base44.entities.Custody.list("-created_date", 50);
+      const list = await supabaseApi.entities.Custody.list("-created_date", 50);
       setCustody(list);
     } catch (e) {
       console.error(e);
@@ -50,12 +50,43 @@ export default function DriverDashboard() {
     return () => clearInterval(interval);
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!user?.id || !navigator.geolocation) return undefined;
+    let mounted = true;
+    const sendLocation = () => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          if (!mounted) return;
+          try {
+            await supabaseApi.functions.invoke("updateDriverLocation", {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy_m: position.coords.accuracy,
+              heading: position.coords.heading,
+              speed_kmh: position.coords.speed == null ? null : position.coords.speed * 3.6,
+            });
+          } catch (e) {
+            console.debug("Driver location update failed:", e);
+          }
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
+      );
+    };
+    sendLocation();
+    const interval = setInterval(sendLocation, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [user?.id]);
+
   const doTransition = async (order, action) => {
     const t = canTransition(action, order.status, user.role);
     if (!t) return;
     setActing(order.id + action);
     try {
-      const res = await base44.functions.invoke("updateOrderStatus", {
+      const res = await supabaseApi.functions.invoke("updateOrderStatus", {
         order_id: order.id,
         action,
       });
