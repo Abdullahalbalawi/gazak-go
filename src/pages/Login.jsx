@@ -25,7 +25,7 @@ export default function Login() {
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (signInError) throw signInError;
-      window.location.href = returnTo;
+      window.location.href = new URL(returnTo, new URL(import.meta.env.BASE_URL, window.location.origin)).href;
     } catch (err) {
       setError(err.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
     } finally {
@@ -37,7 +37,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const redirectTo = `${window.location.origin}${returnTo}`;
+      const redirectTo = new URL(returnTo, new URL(import.meta.env.BASE_URL, window.location.origin)).href;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
       if (oauthError) throw oauthError;
     } catch (err) {
