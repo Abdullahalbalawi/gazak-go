@@ -474,3 +474,45 @@ const invoke = async (name, payload = {}) => {
 
   throw new Error(`Unsupported application function: ${name}`);
 };
+
+const auth = {
+  async me() {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error("AUTH_REQUIRED");
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userData.user.id)
+      .single();
+    if (profileError) throw profileError;
+
+    return normalizeProfile({
+      ...profile,
+      email: userData.user.email || profile.email || null,
+    });
+  },
+
+  async updateMe(input = {}) {
+    const { data, error } = await supabase.rpc("update_profile_self", {
+      p_full_name: input.full_name ?? null,
+      p_phone: input.phone ?? null,
+    });
+    if (error) throw error;
+    return normalizeProfile(data);
+  },
+
+  async logout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  },
+};
+
+export const supabaseApi = {
+  auth,
+  entities: entity,
+  functions: {
+    invoke,
+  },
+};
