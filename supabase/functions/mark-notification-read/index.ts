@@ -11,9 +11,10 @@ export default {
     try {
       if (!ctx.userClaims?.sub) return Response.json({ error: 'AUTH_REQUIRED' }, { status: 401, headers: corsHeaders });
       const body = await req.json();
-      const { data, error } = await ctx.supabase.rpc('mark_notification_read', {
+      const { data, error } = await ctx.supabaseAdmin.rpc('mark_notification_read', {
         p_notification_id: body.notification_id || null,
         p_all: Boolean(body.all),
+        p_actor_id: actorId,
       });
       if (error) throw error;
       return Response.json({ data }, { headers: corsHeaders });
