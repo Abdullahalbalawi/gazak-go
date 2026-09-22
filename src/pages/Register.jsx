@@ -51,7 +51,7 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({ email: email.trim(), token: otpCode, type: "signup" });
+      const { error: verifyError } = await supabase.auth.verifyOtp({ email: email.trim(), token: otpCode, type: "email" });
       if (verifyError) throw verifyError;
       window.location.href = safeReturnTo();
     } catch (err) {
