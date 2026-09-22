@@ -10,7 +10,7 @@ export default {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
     try {
-      const callerId = ctx.userClaims?.sub;
+      const callerId = ctx.userClaims?.id ?? ctx.userClaims?.sub;
       const { data: caller, error: callerError } = await ctx.supabase
         .from('profiles')
         .select('role')

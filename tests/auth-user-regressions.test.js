@@ -22,3 +22,8 @@ test("user deletion calls the protected delete action", async () => {
   assert.match(functionSource, /auth\.admin\.deleteUser\(userId\)/);
   assert.match(functionSource, /CANNOT_DELETE_SELF/);
 });
+
+test("edge functions accept the current userClaims id field", async () => {
+  const functionSource = await read("supabase/functions/admin-user/index.ts");
+  assert.match(functionSource, /userClaims\?\.id\s*\?\?\s*ctx\.userClaims\?\.sub/);
+});

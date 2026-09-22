@@ -9,7 +9,7 @@ export default {
   fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
     try {
-      const actorId = ctx.userClaims?.sub;
+      const actorId = ctx.userClaims?.id ?? ctx.userClaims?.sub;
       if (!actorId) return Response.json({ error: 'AUTH_REQUIRED' }, { status: 401, headers: corsHeaders });
 
       const body = await req.json();

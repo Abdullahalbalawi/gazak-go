@@ -9,7 +9,8 @@ export default {
   fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
     try {
-      if (!ctx.userClaims?.sub) return Response.json({ error: 'AUTH_REQUIRED' }, { status: 401, headers: corsHeaders });
+      const actorId = ctx.userClaims?.id ?? ctx.userClaims?.sub;
+      if (!actorId) return Response.json({ error: 'AUTH_REQUIRED' }, { status: 401, headers: corsHeaders });
       const body = await req.json();
       const { data, error } = await ctx.supabaseAdmin.rpc('mark_notification_read', {
         p_notification_id: body.notification_id || null,
