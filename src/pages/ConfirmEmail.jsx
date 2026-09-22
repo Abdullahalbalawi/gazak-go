@@ -14,14 +14,48 @@ export default function ConfirmEmail() {
 
     const finish = async () => {
       try {
+        // Supabase returns authentication errors in the URL hash when the
+        // confirmation link cannot be consumed.
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const authError = hashParams.get("error_description") || hashParams.get("error");
+        if (authError) {
+          throw new Error(decodeURIComponent(authError.replace(/\+/g, " ")));
+        }
+
         const { data, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
 
-        if (!data.session?.user) {
+        if (data.session?.user) {
+          navigate("/", { replace: true });
+          return;
+        }
+
+        // Give detectSessionInUrl a moment to finish processing the
+        // confirmation callback before declaring the link invalid.
+        const session = await new Promise((resolve) => {
+          let settled = false;
+          const finishOnce = (value) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            subscription.unsubscribe();
+            resolve(value);
+          };
+
+          const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+            if (nextSession?.user) finishOnce(nextSession);
+          });
+          const subscription = listener.subscription;
+          const timer = setTimeout(async () => {
+            const { data: latest } = await supabase.auth.getSession();
+            finishOnce(latest.session || null);
+          }, 1500);
+        });
+
+        if (!session?.user) {
           throw new Error("تعذر تأكيد البريد الإلكتروني. قد يكون الرابط منتهي الصلاحية أو تم استخدامه مسبقًا.");
         }
 
-        // AuthContext will load the user's profile after the session is established.
         navigate("/", { replace: true });
       } catch (err) {
         if (mounted) setError(err.message || "تعذر تأكيد البريد الإلكتروني");
@@ -43,7 +77,11 @@ export default function ConfirmEmail() {
   }
 
   return (
-    <AuthLayout icon={error ? AlertTriangle : MailCheck} title={error ? "تعذر تأكيد البريد" : "تم تأكيد البريد"} subtitle={error || "تم تأكيد بريدك الإلكتروني بنجاح."}>
+    <AuthLayout
+      icon={error ? AlertTriangle : MailCheck}
+      title={error ? "تعذر تأكيد البريد" : "تم تأكيد البريد"}
+      subtitle={error || "تم تأكيد بريدك الإلكتروني بنجاح."}
+    >
       {error && <p className="text-sm text-center text-destructive">{error}</p>}
     </AuthLayout>
   );
