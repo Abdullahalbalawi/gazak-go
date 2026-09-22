@@ -29,7 +29,11 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password });
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { emailRedirectTo: appUrl("/confirm-email") },
+      });
       if (signUpError) throw signUpError;
       if (data.session) {
         window.location.href = appUrl(safeReturnTo());
