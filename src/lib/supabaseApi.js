@@ -541,11 +541,25 @@ const auth = {
 
 const users = {
   async inviteUser(email, platformRole, role) {
+    let { data: sessionData } = await supabase.auth.getSession();
+    let session = sessionData?.session;
+
+    if (!session?.access_token) {
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) throw refreshError;
+      session = refreshed?.session;
+    }
+
+    if (!session?.access_token) throw new Error("AUTH_REQUIRED");
+
     const { data, error } = await supabase.functions.invoke("admin-invite", {
       body: {
         email,
         role: role || (platformRole === "admin" ? "admin" : "customer"),
         redirectTo: window.location.origin + "/login",
+      },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
       },
     });
     if (error) throw error;
