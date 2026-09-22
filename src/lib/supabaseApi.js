@@ -568,15 +568,24 @@ const users = {
       body: {
         email,
         role: role || (platformRole === "admin" ? "admin" : "customer"),
-        // GitHub Pages returns HTTP 404 for direct SPA routes. Land on the
-        // published root (HTTP 200), then let the app forward to the invite page.
-        redirectTo: appUrl("/?authRoute=accept-invite"),
+        redirectTo: appUrl("/accept-invite"),
       },
       headers: {
         Authorization: `Bearer ${session.access_token}`,
       },
     });
-    if (error) throw error;
+    if (error) {
+      let message = data?.error || error.message;
+      if (error.context?.clone) {
+        try {
+          const payload = await error.context.clone().json();
+          message = payload?.error || message;
+        } catch {
+          // Keep the SDK error when the response body is not JSON.
+        }
+      }
+      throw new Error(message);
+    }
     return data;
   },
 };
