@@ -34,19 +34,23 @@ export default function ConfirmEmail() {
         // confirmation callback before declaring the link invalid.
         const session = await new Promise((resolve) => {
           let settled = false;
+          let subscription = null;
+          let timer = null;
+
           const finishOnce = (value) => {
             if (settled) return;
             settled = true;
-            clearTimeout(timer);
-            subscription.unsubscribe();
+            if (timer) clearTimeout(timer);
+            subscription?.unsubscribe();
             resolve(value);
           };
 
           const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
             if (nextSession?.user) finishOnce(nextSession);
           });
-          const subscription = listener.subscription;
-          const timer = setTimeout(async () => {
+          subscription = listener.subscription;
+
+          timer = setTimeout(async () => {
             const { data: latest } = await supabase.auth.getSession();
             finishOnce(latest.session || null);
           }, 1500);
