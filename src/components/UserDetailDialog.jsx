@@ -69,7 +69,7 @@ export default function UserDetailDialog({ user, open, onOpenChange, onDone }) {
   };
 
   const handleDelete = async () => {
-    if (!confirm(`هل أنت متأكد من حذف المستخدم "${user.full_name || user.email}"؟`)) return;
+    if (!confirm(`سيتم حذف حساب المستخدم "${user.full_name || user.email}" نهائيًا ولن يتمكن من تسجيل الدخول. هل تريد المتابعة؟`)) return;
     setDeleting(true);
     try {
       await supabaseApi.entities.User.delete(user.id);
@@ -79,7 +79,10 @@ export default function UserDetailDialog({ user, open, onOpenChange, onDone }) {
     } catch (e) {
       toast({
         title: "فشل الحذف",
-        description: e.response?.data?.error || e.message,
+        description:
+          e.message === "USER_HAS_RELATED_DATA"
+            ? "لا يمكن حذف المستخدم لأن لديه طلبات أو حركات محفوظة. يمكنك إلغاء تنشيطه بدلًا من ذلك."
+            : e.response?.data?.error || e.message,
         variant: "destructive",
       });
     } finally {

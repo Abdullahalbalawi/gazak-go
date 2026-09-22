@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import { waitForAuthSession } from "@/lib/authCallback";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -21,11 +22,10 @@ export default function ResetPassword() {
 
     const prepareRecovery = async () => {
       try {
-        const { data, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
+        const session = await waitForAuthSession(supabase);
 
         if (mounted) {
-          setReady(Boolean(data.session?.user));
+          setReady(Boolean(session?.user));
         }
       } catch (err) {
         if (mounted) {

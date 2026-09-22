@@ -45,6 +45,23 @@ export default {
         return Response.json({ data }, { headers: corsHeaders });
       }
 
+      if (action === 'delete') {
+        if (userId === actorId) {
+          return Response.json({ error: 'CANNOT_DELETE_SELF' }, { status: 400, headers: corsHeaders });
+        }
+
+        const { error } = await ctx.supabaseAdmin.auth.admin.deleteUser(userId);
+        if (error) {
+          const relatedData = /foreign key|violates|constraint/i.test(error.message || '');
+          return Response.json(
+            { error: relatedData ? 'USER_HAS_RELATED_DATA' : error.message },
+            { status: relatedData ? 409 : 400, headers: corsHeaders },
+          );
+        }
+
+        return Response.json({ deleted: true, user_id: userId }, { headers: corsHeaders });
+      }
+
       return Response.json({ error: 'UNKNOWN_ADMIN_USER_ACTION' }, { status: 400, headers: corsHeaders });
     } catch (error) {
       return Response.json({ error: error?.message || 'ADMIN_USER_FAILED' }, { status: 400, headers: corsHeaders });
