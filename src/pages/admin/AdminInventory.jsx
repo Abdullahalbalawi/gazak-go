@@ -116,9 +116,18 @@ export default function AdminInventory() {
       setDialog({ open: false, action: null, product: null });
       fetchData();
     } catch (e) {
+      let errorMessage = e.response?.data?.error || e.message || "MANAGE_INVENTORY_FAILED";
+      try {
+        if (e?.context instanceof Response) {
+          const body = await e.context.clone().json();
+          errorMessage = body?.error || body?.message || errorMessage;
+        }
+      } catch {
+        // Keep the SDK error message when the response body is not JSON.
+      }
       toast({
         title: "فشل العملية",
-        description: e.response?.data?.error || e.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
