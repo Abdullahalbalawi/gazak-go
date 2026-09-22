@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { appUrl } from "@/lib/authReturnTo";
 
 const sortSpec = (sort) => {
   const value = sort || "-created_date";
@@ -556,7 +557,7 @@ const users = {
       body: {
         email,
         role: role || (platformRole === "admin" ? "admin" : "customer"),
-        redirectTo: window.location.origin + "/login",
+        redirectTo: appUrl("/accept-invite"),
       },
       headers: {
         Authorization: `Bearer ${session.access_token}`,
