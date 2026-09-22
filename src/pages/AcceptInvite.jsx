@@ -22,7 +22,36 @@ export default function AcceptInvite() {
       try {
         const { data, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
-        if (!data.session?.user) throw new Error("رابط الدعوة غير صالح أو منتهي الصلاحية");
+
+        let session = data.session;
+
+        if (!session?.user) {
+          session = await new Promise((resolve) => {
+            let settled = false;
+            let subscription = null;
+            let timer = null;
+
+            const finishOnce = (value) => {
+              if (settled) return;
+              settled = true;
+              if (timer) clearTimeout(timer);
+              subscription?.unsubscribe();
+              resolve(value);
+            };
+
+            const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+              if (nextSession?.user) finishOnce(nextSession);
+            });
+            subscription = listener.subscription;
+
+            timer = setTimeout(async () => {
+              const { data: latest } = await supabase.auth.getSession();
+              finishOnce(latest.session || null);
+            }, 1500);
+          });
+        }
+
+        if (!session?.user) throw new Error("رابط الدعوة غير صالح أو منتهي الصلاحية");
         if (mounted) setReady(true);
       } catch (err) {
         if (mounted) setError(err.message || "رابط الدعوة غير صالح أو منتهي الصلاحية");
