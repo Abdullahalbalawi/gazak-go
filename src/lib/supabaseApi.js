@@ -320,10 +320,21 @@ const profileEntity = {
 
   async delete(id) {
     const { data, error } = await supabase.functions.invoke("admin-user", {
-      body: { action: "deactivate", user_id: id },
+      body: { action: "delete", user_id: id },
     });
-    if (error) throw error;
-    return normalizeProfile(data.data ?? data);
+    if (error) {
+      let message = data?.error || error.message;
+      if (error.context?.clone) {
+        try {
+          const payload = await error.context.clone().json();
+          message = payload?.error || message;
+        } catch {
+          // Keep the SDK error when the response body is not JSON.
+        }
+      }
+      throw new Error(message);
+    }
+    return data;
   },
 };
 

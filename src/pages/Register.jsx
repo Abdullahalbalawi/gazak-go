@@ -64,7 +64,11 @@ export default function Register() {
   const handleResend = async () => {
     setError("");
     try {
-      const { error: resendError } = await supabase.auth.resend({ type: "signup", email: email.trim() });
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim(),
+        options: { emailRedirectTo: appUrl("/confirm-email") },
+      });
       if (resendError) throw resendError;
       toast({
         title: "تم إرسال الرمز",
