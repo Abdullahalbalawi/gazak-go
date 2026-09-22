@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabaseApi } from "@/lib/supabaseApi";
 import { useAuth } from "@/lib/AuthContext";
 import StaffHeader from "@/components/StaffHeader";

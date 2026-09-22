@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Lock, AlertTriangle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import { waitForAuthSession } from "@/lib/authCallback";
 
 export default function AcceptInvite() {
   const navigate = useNavigate();
@@ -20,37 +21,7 @@ export default function AcceptInvite() {
     let mounted = true;
     const prepare = async () => {
       try {
-        const { data, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-
-        let session = data.session;
-
-        if (!session?.user) {
-          session = await new Promise((resolve) => {
-            let settled = false;
-            let subscription = null;
-            let timer = null;
-
-            const finishOnce = (value) => {
-              if (settled) return;
-              settled = true;
-              if (timer) clearTimeout(timer);
-              subscription?.unsubscribe();
-              resolve(value);
-            };
-
-            const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-              if (nextSession?.user) finishOnce(nextSession);
-            });
-            subscription = listener.subscription;
-
-            timer = setTimeout(async () => {
-              const { data: latest } = await supabase.auth.getSession();
-              finishOnce(latest.session || null);
-            }, 1500);
-          });
-        }
-
+        const session = await waitForAuthSession(supabase);
         if (!session?.user) throw new Error("رابط الدعوة غير صالح أو منتهي الصلاحية");
         if (mounted) setReady(true);
       } catch (err) {

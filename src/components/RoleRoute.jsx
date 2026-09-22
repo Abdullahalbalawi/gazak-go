@@ -1,13 +1,7 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
-
-const ROLE_HOMES = {
-  customer: "/",
-  distributor: "/distributor",
-  driver: "/driver",
-  admin: "/admin",
-};
+import { isRoleAllowed, roleHome } from "@/lib/roles";
 
 export default function RoleRoute({ allowedRoles, allowUnauthenticated = false, children }) {
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
@@ -29,10 +23,10 @@ export default function RoleRoute({ allowedRoles, allowUnauthenticated = false, 
     return <Navigate to={loginPath} replace />;
   }
 
-  const role = user?.role || "customer";
+  const role = user?.role;
 
-  if (!allowedRoles.includes(role)) {
-    return <Navigate to={ROLE_HOMES[role] || "/"} replace />;
+  if (!isRoleAllowed(role, allowedRoles)) {
+    return <Navigate to={roleHome(role)} replace />;
   }
 
   return children;
