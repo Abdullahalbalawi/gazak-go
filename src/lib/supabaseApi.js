@@ -568,7 +568,9 @@ const users = {
       body: {
         email,
         role: role || (platformRole === "admin" ? "admin" : "customer"),
-        redirectTo: appUrl("/accept-invite"),
+        // GitHub Pages returns HTTP 404 for direct SPA routes. Land on the
+        // published root (HTTP 200), then let the app forward to the invite page.
+        redirectTo: appUrl("/?authRoute=accept-invite"),
       },
       headers: {
         Authorization: `Bearer ${session.access_token}`,
