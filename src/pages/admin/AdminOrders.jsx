@@ -5,7 +5,7 @@ import StatusBadge from "@/components/StatusBadge";
 import OrderHistoryTimeline from "@/components/OrderHistoryTimeline";
 import { ORDER_STATUSES, STATUS_LABELS_AR } from "@/lib/orderStatus";
 import ReturnExchangeDialog from "@/components/ReturnExchangeDialog";
-import { Loader2, MapPin, User, UserCog, ChevronDown, ChevronUp, RotateCcw, Trash2 } from "lucide-react";
+import { Loader2, MapPin, UserCog, ChevronDown, ChevronUp, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,

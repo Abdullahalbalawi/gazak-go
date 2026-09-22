@@ -53,7 +53,7 @@ export default function Register() {
     try {
       const { error: verifyError } = await supabase.auth.verifyOtp({ email: email.trim(), token: otpCode, type: "email" });
       if (verifyError) throw verifyError;
-      window.location.href = safeReturnTo();
+      window.location.href = appUrl(safeReturnTo());
     } catch (err) {
       setError(err.message || "رمز التحقق غير صحيح");
     } finally {

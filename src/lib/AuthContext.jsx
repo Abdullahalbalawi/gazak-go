@@ -4,6 +4,8 @@ import { appUrl } from '@/lib/authReturnTo';
 
 const AuthContext = createContext(null);
 
+const authProfileError = (type, message) => Object.assign(new Error(message), { authType: type });
+
 const publicUserFromAuth = (authUser, profile) => {
   if (!authUser) return null;
 
@@ -17,7 +19,7 @@ const publicUserFromAuth = (authUser, profile) => {
       authUser.email?.split('@')[0] ??
       '',
     full_name: profile?.full_name ?? authUser.user_metadata?.full_name ?? '',
-    role: profile?.role ?? 'customer',
+    role: profile.role,
     phone: profile?.phone ?? authUser.user_metadata?.phone ?? '',
     avatar_url: profile?.avatar_url ?? authUser.user_metadata?.avatar_url ?? null,
     ...profile,
@@ -51,6 +53,13 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
 
+    if (!profile) {
+      throw authProfileError('user_not_registered', 'لا يوجد ملف مستخدم مرتبط بهذا الحساب');
+    }
+    if (!profile.is_active) {
+      throw authProfileError('user_inactive', 'تم تعطيل هذا الحساب');
+    }
+
     const nextUser = publicUserFromAuth(authUser, profile);
     setUser(nextUser);
     return nextUser;
@@ -80,7 +89,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
       setAuthError({
-        type: 'auth_required',
+        type: error.authType || 'auth_required',
         message: error.message || 'Authentication required',
       });
     } finally {
@@ -112,27 +121,37 @@ export const AuthProvider = ({ children }) => {
       if (!mounted) return;
 
       setSession(nextSession ?? null);
-      setIsAuthenticated(Boolean(nextSession?.user));
 
       if (nextSession?.user) {
+        setIsLoadingAuth(true);
         // Defer the profile query so the auth callback remains lightweight.
-        setTimeout(() => {
+        setTimeout(async () => {
           if (mounted) {
-            loadProfile(nextSession.user).catch((error) => {
+            try {
+              await loadProfile(nextSession.user);
+              setIsAuthenticated(true);
+              setAuthError(null);
+            } catch (error) {
               console.error('Failed to refresh profile:', error);
+              setUser(null);
+              setIsAuthenticated(false);
               setAuthError({
-                type: 'profile_error',
+                type: error.authType || 'profile_error',
                 message: error.message || 'Failed to load user profile',
               });
-            });
+            } finally {
+              setIsLoadingAuth(false);
+              setAuthChecked(true);
+            }
           }
         }, 0);
       } else {
         setUser(null);
+        setIsAuthenticated(false);
+        setAuthError(null);
+        setIsLoadingAuth(false);
+        setAuthChecked(true);
       }
-
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
     });
 
     return () => {

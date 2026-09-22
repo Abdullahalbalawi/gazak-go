@@ -13,11 +13,11 @@ export default {
       const callerId = ctx.userClaims?.sub;
       const { data: caller, error: callerError } = await ctx.supabase
         .from('profiles')
-        .select('role')
+        .select('role,is_active')
         .eq('id', callerId)
         .single();
 
-      if (callerError || caller?.role !== 'admin') {
+      if (callerError || caller?.role !== 'admin' || !caller?.is_active) {
         return Response.json({ error: 'ADMIN_REQUIRED' }, { status: 403, headers: corsHeaders });
       }
 
@@ -36,11 +36,14 @@ export default {
       if (error) throw error;
 
       if (data.user?.id) {
-        const { error: profileError } = await ctx.supabaseAdmin
+        const { data: profile, error: profileError } = await ctx.supabaseAdmin
           .from('profiles')
           .update({ role })
-          .eq('id', data.user.id);
+          .eq('id', data.user.id)
+          .select('id,role')
+          .single();
         if (profileError) throw profileError;
+        if (profile?.role !== role) throw new Error('ROLE_ASSIGNMENT_FAILED');
       }
 
       return Response.json({ user: data.user, role }, { headers: corsHeaders });

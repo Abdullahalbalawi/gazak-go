@@ -4,7 +4,6 @@ import StaffHeader from "@/components/StaffHeader";
 import AddUserDialog from "@/components/AddUserDialog";
 import UserDetailDialog from "@/components/UserDetailDialog";
 import { Loader2, User, Mail, Phone, UserPlus } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
 
 const ROLES = [
   { value: "customer", label: "عميل" },
