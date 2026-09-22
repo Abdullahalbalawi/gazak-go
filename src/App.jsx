@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -44,6 +44,17 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminProducts from '@/pages/admin/AdminProducts';
 import AdminInventory from '@/pages/admin/AdminInventory';
 
+const PublicLanding = () => {
+  const location = useLocation();
+  const authRoute = new URLSearchParams(location.search).get('authRoute');
+
+  if (authRoute === 'accept-invite') {
+    return <Navigate to="/accept-invite" replace />;
+  }
+
+  return <HomeRouter />;
+};
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
@@ -70,7 +81,7 @@ const AuthenticatedApp = () => {
       <Route path="/confirm-email" element={<ConfirmEmail />} />
 
       {/* Public routes */}
-      <Route path="/" element={<HomeRouter />} />
+      <Route path="/" element={<PublicLanding />} />
       <Route path="/cart" element={<RoleRoute allowedRoles={["customer"]} allowUnauthenticated><Cart /></RoleRoute>} />
 
       {/* Protected routes */}
