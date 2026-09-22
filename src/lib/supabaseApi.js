@@ -450,8 +450,27 @@ const invoke = async (name, payload = {}) => {
   };
 
   if (functionMap[name]) {
+    // Explicitly attach the current Supabase access token. This prevents Edge Functions
+    // from receiving an anonymous request when the browser session is persisted but
+    // the SDK invocation does not automatically propagate the Authorization header.
+    let { data: sessionData } = await supabase.auth.getSession();
+    let session = sessionData?.session;
+
+    if (!session?.access_token) {
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) throw refreshError;
+      session = refreshed?.session;
+    }
+
+    if (!session?.access_token) {
+      throw new Error("AUTH_REQUIRED");
+    }
+
     const { data, error } = await supabase.functions.invoke(functionMap[name], {
       body: payload,
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
     });
     if (error) throw error;
 
