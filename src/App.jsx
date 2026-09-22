@@ -15,6 +15,8 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+import AcceptInvite from '@/pages/AcceptInvite';
+import ConfirmEmail from '@/pages/ConfirmEmail';
 
 // Shared
 import HomeRouter from '@/components/HomeRouter';
@@ -64,6 +66,8 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/accept-invite" element={<AcceptInvite />} />
+      <Route path="/confirm-email" element={<ConfirmEmail />} />
 
       {/* Public routes */}
       <Route path="/" element={<HomeRouter />} />
