@@ -28,11 +28,7 @@ test("edge functions accept the current userClaims id field", async () => {
   assert.match(functionSource, /userClaims\?\.id\s*\?\?\s*ctx\.userClaims\?\.sub/);
 });
 
-test("admin invitations land on the GitHub Pages root before client routing", async () => {
+test("admin invitations use the allow-listed acceptance callback", async () => {
   const apiSource = await read("src/lib/supabaseApi.js");
-  const appSource = await read("src/App.jsx");
-
-  assert.match(apiSource, /appUrl\("\/\?authRoute=accept-invite"\)/);
-  assert.match(appSource, /authRoute === 'accept-invite'/);
-  assert.match(appSource, /Navigate to="\/accept-invite"/);
+  assert.match(apiSource, /appUrl\("\/accept-invite"\)/);
 });

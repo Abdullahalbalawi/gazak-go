@@ -20,6 +20,14 @@ const ROLES = [
   { value: "admin", label: "إدارة" },
 ];
 
+const INVITE_ERRORS = {
+  AUTH_REQUIRED: "انتهت جلسة الدخول. سجل الخروج ثم ادخل مرة أخرى.",
+  ADMIN_REQUIRED: "هذه العملية متاحة لحساب الإدارة النشط فقط.",
+  EMAIL_REQUIRED: "أدخل البريد الإلكتروني.",
+  INVALID_ROLE: "الدور المحدد غير صالح.",
+  ROLE_ASSIGNMENT_FAILED: "تم إنشاء الدعوة ولكن تعذر تعيين الدور.",
+};
+
 export default function AddUserDialog({ open, onOpenChange, onDone }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("customer");
@@ -44,7 +52,7 @@ export default function AddUserDialog({ open, onOpenChange, onDone }) {
     } catch (e) {
       toast({
         title: "فشل إرسال الدعوة",
-        description: e.response?.data?.error || e.message,
+        description: INVITE_ERRORS[e.message] || e.response?.data?.error || e.message,
         variant: "destructive",
       });
     } finally {
